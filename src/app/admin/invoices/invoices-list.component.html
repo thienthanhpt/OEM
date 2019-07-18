@@ -1,0 +1,109 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+    <!-- Search form -->
+    <form class="form-horizontal" (ngSubmit)="filterInvoiceByStatus(getResetTableParameters())">
+      <div class="form-group row">
+        <div class="col-md-8">
+          <div class="input-group">
+            <input type="text" class="form-control" name="search"
+                   placeholder="Customer Name / Sunseap Account No / Email Address / Premise Address / Premise Postal Code / Invoice No / Mssl No / Invoice Period"
+                   title="Customer Name / Sunseap Account No / Email Address / Premise Address / Premise Postal Code / Invoice No / Mssl No / Invoice Period"
+                   [(ngModel)]="criteriaAllInOne">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <div class="col-md-4">
+          <select name="invoice-status" id="invoice-status" class="form-control border-radius"
+                  (change)="filterInvoiceByStatus(getResetTableParameters())" [(ngModel)]="invoiceStatusFilterValue"
+                  placeholder="Invoice Status" #invoiceStatusFilter="ngModel">
+            <option [value]="''">Filter by Invoice Status</option>
+            <option *ngFor="let option of invocieStatusList | toArray" [value]="option.key">Invoice Status {{ option.value }}</option>
+          </select>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Data table -->
+    <data-table id="table"
+                [items]="items"
+                [itemCount]="meta.count"
+                [page]="meta.page"
+                [limit]="invoicePagination.limit"
+                [sortBy]="invoicePagination.sortBy" [sortAsc]="invoicePagination.sortAsc"
+                [indexColumnHeader]="'#'"
+                [substituteRows]="false"
+                (reload)="filterInvoiceByStatus($event)">
+      <data-table-column [property]="'consumer.customer.name'" [header]="'Customer Name'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'consumer.customer.emailAddress'" [header]="'Email Address'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'consumer.customer.spAccountNo'" [header]="'Account Number'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'no'" [header]="'Invoice No'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'consumer.msslNo'" [header]="'Mssl Number'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'contract.id'" [header]="'Contract Number'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'consumer.premiseAddress'" [header]="'Premise Address'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'consumer.premisePostalCode'" [header]="'Premise Postal Code'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'pricingPlanName'" [header]="'Pricing Name'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'rate'" header="Rate / Discount (%)" [visible]="false" [sortable]="false">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.rate | percentage: false }} / {{ item.discountPercentage | percentage: false }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'cleanEnergyPercentage'" [header]="'Clean Energy (%)'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'offPeakRate'" [header]="'Off Peak Rate (%)'" [visible]="false" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.offPeakRate | percentage: false }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'period'" [header]="'Invoice Period'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'invoiceDate.short'" [header]="'Invoice Date'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'dueDate.short'" [header]="'Invoice Due Date'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'oldBalance'" [header]="'Outstanding Balance Before Invoice'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newBalance'" [header]="'New Outstanding Balance'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'latePaymentCharge'" [header]="'Late Payment Charges'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'netAmount'" [header]="'Amount before GST'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'gstAmount'" [header]="'GST Amount'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'rebate'" [header]="'Rebate'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'totalAmount'" [header]="'Total Amount Payable'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'usageAmount'" [header]="'Usage Amount'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'usageFromDate.short'" [header]="'Usage Date From'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'usageToDate.short'" [header]="'Usage Date To'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'peakConsumption'" [header]="'Peak Period Consumption (%)'" [visible]="false" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.peakConsumption | percentage: false }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'offPeakConsumption'" [header]="'Off Peak Period Consumption (%)'" [visible]="false" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.offPeakConsumption | percentage: false }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'remarks'" [header]="'Remarks'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'url'" [header]="'URL'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'createdTime.short'" [header]="'Created Time'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'updatedTime.short'" [header]="'Last Updated Time'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'invoiceStatusDisplay'" [header]="'Invoice Status'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'origin'" [header]="'Invoice Origin'" [sortable]="true"></data-table-column>
+      <data-table-column header="Actions">
+        <ng-template #dataTableHeader let-item="item">
+          <i>Actions</i>
+        </ng-template>
+        <ng-template #dataTableCell let-item="item">
+          <a class="btn btn-primary btn-sm" [routerLink]="[item.id, 'detail']"><i class="fas fa-eye"></i></a>
+          <a *ngIf="item.status === 'new'" [routerLink]="[item.id, 'edit']" class="btn btn-primary btn-sm">
+            <i class="fas fa-edit"></i>
+          </a>
+        </ng-template>
+      </data-table-column>
+    </data-table>
+  </div>
+</div>

@@ -1,0 +1,421 @@
+<div class="card">
+
+  <div class="card-header">
+    <div class="float-right">
+      <a class="btn btn-md btn-secondary" [routerLink]="linkToList()"><i class="fa fa-chevron-circle-left"></i> Return to List</a>
+      <a class="btn btn-md btn-secondary" href="javascript:void(0)" *ngIf="hasBackHistory" (click)="goBack()"><i class="fa fa-chevron-circle-left"></i> Back</a>
+      <button type="submit" *ngIf="!is('detail')"
+              [ngClass]="['btn', is('new') ? 'btn-success' : 'btn-primary']"
+              (click)="modelForm.ngSubmit.emit()"
+              [disabled]="!modelForm.form.valid || isLoading">
+        <i class="fas fa-check-circle"></i> {{ is('new') ? 'Add' : 'Save' }}
+      </button>
+      <a *ngIf="is('detail') && isAccessible(PageAccess.Edit)" class="btn btn-md btn-primary text-white" [routerLink]="['../edit']" [queryParams]="getHistoryParams()"><i class="fas fa-edit"></i> Edit</a>
+    </div>
+  </div>
+
+  <div class="block-loading" [class.is-loading]="isLoading">
+    <div class="card-body">
+      <form action="" method="post" enctype="multipart/form-data" class="form-horizontal"
+            [class.admin-crud-form]="!is('detail')"
+            (ngSubmit)="onSubmit()"
+            #modelForm="ngForm">
+
+        <h5 class="border-bottom mb-4 pb-1">
+          Pricing Plan
+        </h5>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="pricing-name">Pricing Name</label>
+          <div class="col-md-4">
+            <input type="text" id="pricing-name" name="pricing-name" class="form-control" placeholder="Pricing Name"
+                   [class.is-invalid]="name.touched && name.invalid"
+                   [disabled]="is('detail')"
+                   required maxlength="64"
+                   [(ngModel)]="model.name" #name="ngModel">
+
+            <div *ngIf="name.touched && name.invalid" class="invalid-feedback">
+
+              <div *ngIf="name?.errors.required">
+                Pricing Name is required.
+              </div>
+
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label" for="subscription">Validity</label>
+          <div class="col-md-4">
+            <input type="number" id="subscription" name="subscription" class="form-control" placeholder="Validity"
+                   [disabled]="is('detail')"
+                   [(ngModel)]="model.subscription" #subscription="ngModel">
+
+          </div>
+        </div>
+
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="company-name">Company</label>
+          <div class="col-md-4">
+            <input type="text" id="company-name" name="company-name" class="form-control" placeholder="Company Name"
+                   [class.is-invalid]="companyName.touched && companyName.invalid"
+                   [disabled]="is('detail')"
+                   maxlength="64"
+                   required
+                   [(ngModel)]="model.companyName" #companyName="ngModel">
+
+            <div *ngIf="companyName.touched && companyName.invalid" class="invalid-feedback">
+
+              <div *ngIf="companyName?.errors.required">
+                Company name is required.
+              </div>
+
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label required" for="description">Description</label>
+          <div class="col-md-4">
+            <textarea id="description" name="description" class="form-control" placeholder="Description"
+                      [class.is-invalid]="description.touched && description.invalid"
+                      [disabled]="is('detail')"
+                      required maxlength="255"
+                      [(ngModel)]="model.description" #description="ngModel">
+            </textarea>
+
+            <div *ngIf="description.touched && description.invalid" class="invalid-feedback">
+              <div *ngIf="description?.errors.required">
+                Description is required.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="productType">Product Type</label>
+          <div class="col-md-4">
+            <ng-container *ngIf="!is('detail')">
+              <select name="productType" id="productType" class="form-control"
+                      [class.is-invalid]="productType.touched && productType.invalid"
+                      required
+                      [(ngModel)]="model.productType" #productType="ngModel">
+                <option *ngIf="is('new')" [value]="null" disabled>Please select a Product Type</option>
+                <option *ngFor="let option of productTypeOptions | toArray" [value]="option.key">{{ option.value | uppercase }}</option>
+              </select>
+
+              <div *ngIf="productType.touched && productType.invalid" class="invalid-feedback">
+                <div *ngIf="productType?.errors.required">
+                  Product Type is required.
+                </div>
+              </div>
+            </ng-container>
+
+            <input type="text" *ngIf="is('detail')" class="form-control" disabled
+                   [value]="model.productType | uppercase">
+          </div>
+        </div>
+
+        <ng-container *ngIf="is('new')">
+          <h5 class="border-bottom mb-4 pb-1">
+            Plan Rate
+          </h5>
+          <div class="form-group row">
+            <label class="col-md-2 form-control-label required" for="sales-status-create">Status</label>
+            <div class="col-md-4">
+              <select name="sales-status-create" id="sales-status-create" class="form-control"
+                      [class.is-invalid]="status.touched && status.invalid"
+                      required
+                      [(ngModel)]="model.currentPricingPlanRate.status" #status="ngModel">
+                <option *ngIf="is('new')" [value]="null" disabled>Please select a status</option>
+                <option *ngFor="let option of pricingPlanRateOptions | toArray" [value]="option.key">{{ option.value }}</option>
+              </select>
+
+              <div *ngIf="status.touched && status.invalid" class="invalid-feedback">
+                <div *ngIf="status?.errors.required">
+                  Status is required.
+                </div>
+              </div>
+
+            </div>
+
+            <label class="col-md-2 form-control-label required" for="rate-create">Rate</label>
+            <div class="col-md-4">
+              <input type="number" id="rate-create" name="rate-create" class="form-control" placeholder="Rate"
+                     [class.is-invalid]="rate.touched && rate.invalid"
+                     required pattern="^(0(\.\d+)?|1(\.0+)?)$"
+                     [(ngModel)]="model.currentPricingPlanRate.rate" #rate="ngModel">
+
+              <div *ngIf="rate.touched && rate.invalid" class="invalid-feedback">
+
+                <div *ngIf="rate?.errors.pattern">
+                  Rate is between 0 and 1.
+                </div>
+
+                <div *ngIf="rate?.errors.required">
+                  Rate is required.
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group row">
+            <label class="col-md-2 form-control-label" for="off-peak-rate-create">Off Peak Rate</label>
+            <div class="col-md-4">
+              <input type="number" id="off-peak-rate-create" name="off-peak-rate-create" class="form-control" placeholder="Off Peak Rate"
+                     [class.is-invalid]="offPeakRate.touched && offPeakRate.invalid"
+                     pattern="^(0(\.\d+)?|1(\.0+)?)$"
+                     [(ngModel)]="model.currentPricingPlanRate.offPeakRate" #offPeakRate="ngModel">
+
+            </div>
+
+            <label class="col-md-2 form-control-label required" for="discount-create">Discount</label>
+            <div class="col-md-4">
+              <input type="number" id="discount-create" name="discount-create" class="form-control" placeholder="Discount"
+                     [class.is-invalid]="discount.touched && discount.invalid"
+                     required pattern="(0(\.\d+)?|1(\.0+)?)$"
+                     [(ngModel)]="model.currentPricingPlanRate.discountPercentage" #discount="ngModel">
+
+              <div *ngIf="discount.touched && discount.invalid" class="invalid-feedback">
+
+                <div *ngIf="discount?.errors.pattern">
+                  Discount is between 0 and 1.
+                </div>
+
+                <div *ngIf="discount?.errors.required">
+                  Discount is required.
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group row">
+            <label class="col-md-2 form-control-label required" for="clean-energy-create">Clean Energy</label>
+            <div class="col-md-4">
+              <input type="number" id="clean-energy-create" name="clean-energy-create" class="form-control" placeholder="Clean Energy (%)"
+                     [class.is-invalid]="cleanEnergyPercentage.touched && cleanEnergyPercentage.invalid"
+                     required pattern="^(0?[0-9]?[0-9]|100)$"
+                     [(ngModel)]="model.currentPricingPlanRate.cleanEnergyPercentage" #cleanEnergyPercentage="ngModel">
+
+              <div *ngIf="cleanEnergyPercentage.touched && cleanEnergyPercentage.invalid" class="invalid-feedback">
+
+                <div *ngIf="cleanEnergyPercentage?.errors.pattern">
+                  Clean Energy is between 0 and 100.
+                </div>
+
+                <div *ngIf="cleanEnergyPercentage?.errors.required">
+                  Clean Energy is required.
+                </div>
+
+              </div>
+            </div>
+
+            <label class="col-md-2 form-control-label required" for="start-date-create">Start date</label>
+            <div class="col-md-4">
+              <input id="start-date-create" name="start-date-create" class="form-control" [placeholder]="'Start Date'"
+                     bsDatepicker [bsConfig]="adminConfig?.bootstrap.datePicker"
+                     required
+                     [(ngModel)]="model.currentPricingPlanRate.startDate.short" #startDate="ngModel">
+              <div *ngIf="startDate.touched && startDate.invalid" class="invalid-feedback">
+                <div *ngIf="startDate?.errors.required">
+                  Start Date is required.
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </form>
+
+    </div>
+  </div>
+
+  <ng-container *ngIf="is('detail')">
+    <div class="card-header">
+      <div class="float-right" *ngIf="isPricingPlanRateAccessible(PageAccess.Create)">
+        <a class="btn btn-md btn-success text-white mt-1" href="javascript:void(0)" (click)="initActionOnPricingPlanRate('create'); modal.open(updatePricingPlanRateModal, 'md')">
+          <i class="fas fa-plus"></i> Create Plan Rate
+        </a>
+      </div>
+    </div>
+    <div class="card-body">
+      <tabset>
+        <tab heading="Plan Rates">
+          <data-table id="plan-rates-table"
+                      [items]="pricingPlanRates"
+                      [itemCount]="pricingPlanRateCount" [limit]="pricingPlanRatePagination.limit"
+                      [sortBy]="startDate" [sortAsc]="false"
+                      [isRefreshable]="true" [isColumnsSelectable]="true"
+                      [indexColumnHeader]="'#'" [substituteRows]="false"
+                      (reload)="reloadPricingPlanRates($event)">
+            <data-table-column [property]="'statusDisplay'" [sortProperty]="'status'"  header="Status" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'rate'" header="Rate / Discount (%)" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.rate }} / {{ item.discountPercentage | percentage }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'cleanEnergyPercentage'" header="Clean Energy" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'offPeakRate'" header="Off Peak Rate" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'startDate.short'" header="Start Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'createdTime.short'" header="Created Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'updatedTime.short'" header="Last Updated Date" [sortable]="true"></data-table-column>
+            <data-table-column header="Actions" *ngIf="isPricingPlanRateAccessible('edit') || isPricingPlanRateAccessible('create')">
+              <ng-template #dataTableHeader let-item="item">
+                <i>Actions</i>
+              </ng-template>
+              <ng-template #dataTableCell let-item="item">
+                <a *ngIf="isPricingPlanRateAccessible(PageAccess.Edit)" href="javascript:void(0)" class="btn btn-primary btn-sm" title="Edit"
+                   (click)="initActionOnPricingPlanRate('update', item); modal.open(updatePricingPlanRateModal, 'md')">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a *ngIf="isPricingPlanRateAccessible(PageAccess.Create)" href="javascript:void(0)" class="btn btn-primary btn-sm" title="Duplicate"
+                   (click)="initActionOnPricingPlanRate('duplicate', item); modal.open(updatePricingPlanRateModal, 'md')">
+                  <i class="far fa-clone"></i>
+                </a>
+              </ng-template>
+            </data-table-column>
+          </data-table>
+        </tab>
+      </tabset>
+    </div>
+
+    <ng-template #updatePricingPlanRateModal>
+      <div class="modal-body admin-crud-form">
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label required" for="update-status">Status</label>
+            <div class="col-md-9">
+              <select name="update-status" id="update-status" class="form-control"
+                      [class.is-invalid]="saleStatus?.touched && saleStatus.invalid"
+                      required [disabled]="modalAction === 'duplicate' || modalAction === 'confirm'"
+                      [(ngModel)]="modelPricingPlanRate.status" #saleStatus="ngModel">
+                <option [value]="null" disabled>Please select a status</option>
+                <option *ngFor="let option of pricingPlanRateOptions | toArray" [value]="option.key">{{ option.value }}</option>
+              </select>
+
+              <div *ngIf="saleStatus?.touched && saleStatus.invalid" class="invalid-feedback">
+
+                <div *ngIf="saleStatus?.errors.required">
+                  Status is required.
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label required" for="update-rate">Rate</label>
+            <div class="col-md-9">
+              <input type="number" id="update-rate" name="update-rate" class="form-control" placeholder="Rate"
+                     [class.is-invalid]="rate.touched && rate.invalid"
+                     [disabled]="modalAction === 'confirm'"
+                     required pattern="^(0(\.\d+)?|1(\.0+)?)$"
+                     [(ngModel)]="modelPricingPlanRate.rate" #rate="ngModel"/>
+              <div *ngIf="rate.touched && rate.invalid" class="invalid-feedback">
+
+                <div *ngIf="rate?.errors.pattern">
+                  Rate is between 0 and 1.
+                </div>
+
+                <div *ngIf="rate?.errors.required">
+                  Rate is required.
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label required" for="update-discount">Discount</label>
+            <div class="col-md-9">
+              <input type="number" id="update-discount" name="update-discount" class="form-control" placeholder="Discount"
+                     [class.is-invalid]="discount.touched && discount.invalid"
+                     [disabled]="modalAction === 'duplicate' || modalAction === 'confirm'"
+                     required pattern="^(0(\.\d+)?|1(\.0+)?)$"
+                     [(ngModel)]="modelPricingPlanRate.discountPercentage" #discount="ngModel"/>
+              <div *ngIf="discount.touched && discount.invalid" class="invalid-feedback">
+
+                <div *ngIf="discount?.errors.pattern">
+                  Discount is between 0 and 1.
+                </div>
+
+                <div *ngIf="discount?.errors.required">
+                  Discount is required.
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label" for="update-off-peak-rate">Off Peak Rate</label>
+            <div class="col-md-9">
+              <input type="number" id="update-off-peak-rate" name="update-off-peak-rate" class="form-control" placeholder="Off Peak Rate"
+                     [class.is-invalid]="offPeakRate.touched && offPeakRate.invalid"
+                     [disabled]="modalAction === 'duplicate' || modalAction === 'confirm'"
+                     pattern="(0(\.\d+)?|1(\.0+)?)$"
+                     [(ngModel)]="modelPricingPlanRate.offPeakRate" #offPeakRate="ngModel"/>
+              <div *ngIf="offPeakRate.touched && offPeakRate.invalid" class="invalid-feedback">
+
+                <div *ngIf="offPeakRate?.errors.pattern">
+                  Off Peak Rate is between 0 and 1.
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label required" for="update-clean-energy">Clean Energy</label>
+            <div class="col-md-9">
+              <input type="number" id="update-clean-energy" name="update-clean-energy" class="form-control" placeholder="Clean Energy"
+                     [class.is-invalid]="cleanEnergyPercentage.touched && cleanEnergyPercentage.invalid"
+                     [disabled]="modalAction === 'duplicate' || modalAction === 'confirm'"
+                     required pattern="^(0?[0-9]?[0-9]|100)$"
+                     [(ngModel)]="modelPricingPlanRate.cleanEnergyPercentage" #cleanEnergyPercentage="ngModel"/>
+              <div *ngIf="cleanEnergyPercentage.touched && cleanEnergyPercentage.invalid" class="invalid-feedback">
+
+                <div *ngIf="cleanEnergyPercentage?.errors.pattern">
+                  Clean Energy is between 0 and 100.
+                </div>
+
+                <div *ngIf="cleanEnergyPercentage?.errors.required">
+                  Clean Energy is required.
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label required" for="update-start-date">Start Date</label>
+            <div class="col-md-9">
+              <input id="update-start-date" name="update-start-date" class="form-control" [placeholder]="'Start Date'"
+                     bsDatepicker [bsConfig]="adminConfig?.bootstrap.datePicker"
+                     [disabled]="modalAction === 'confirm'"
+                     required
+                     [(ngModel)]="modelPricingPlanRate.startDate.short" #startDate="ngModel">
+              <div *ngIf="startDate.touched && startDate.invalid" class="invalid-feedback">
+
+                <div *ngIf="startDate?.errors.required">
+                  Start Date is required.
+                </div>
+
+              </div>
+            </div>
+          </div>
+        <b></b>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-md mr-auto" (click)="modal.hide()">Back</button>
+        <button *ngIf="modalAction !== 'confirm'" type="button" class="btn btn-md btn-primary"
+                [ngClass]="{'btn-success': modalAction === 'create'}"
+                (click)="modal.hide(); modalAction !== 'duplicate' ? onPricingPlanRateAction() : modal.open(updatePricingPlanRateModal, 'md'); modalAction = 'confirm'">
+          <span class="font-weigh-bold">{{ modalAction === 'update' ? 'Save' : (modalAction === 'create' ? 'Add' : 'Duplicate') }}</span>
+        </button>
+        <button *ngIf="modalAction === 'confirm'" type="button" class="btn btn-md btn-primary"
+                (click)="onPricingPlanRateAction()">
+          <span class="font-weigh-bold">Confirm</span>
+        </button>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>
+

@@ -1,0 +1,48 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+
+    <!-- Search form -->
+    <form class="form-horizontal" (ngSubmit)="reloadItems(getResetTableParameters())">
+      <div class="form-group row">
+        <div class="col-md-4">
+          <div class="input-group">
+            <input type="text" class="form-control" name="search" placeholder="MSSL No"
+                   [(ngModel)]="criteriaAllInOne">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <!-- Data table -->
+    <data-table id="table"
+              [items]="items"
+              [itemCount]="meta.count"
+              [page]="meta.page"
+              [limit]="20"
+              [indexColumnHeader]="'#'"
+              [sortBy]="'msslNo'" [sortAsc]="false"
+              [substituteRows]="false"
+              (reload)="reloadItems($event)">
+
+    <data-table-column property="transactionId" header="Transaction ID" [sortable]="true"></data-table-column>
+    <data-table-column property="msslNo" header="MSSL No" [sortable]="true"></data-table-column>
+    <data-table-column property="paymentDate.short" header="Payment Date" [sortable]="true"></data-table-column>
+    <data-table-column property="amount" header="Amount" [sortable]="true">
+      <ng-template #dataTableCell let-item="item">
+        S$ {{ item.amount }}
+      </ng-template>
+    </data-table-column>
+    <data-table-column property="origin" header="Origin" [sortable]="true"></data-table-column>
+    <data-table-column property="status" header="Status" [sortable]="true"></data-table-column>
+    <data-table-column property="createdDate.short" header="Created Date" [sortable]="true"></data-table-column>
+  </data-table>
+  </div>
+</div>

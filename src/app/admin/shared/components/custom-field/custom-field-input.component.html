@@ -1,0 +1,154 @@
+<div class="justify-content-between custom-field">
+  <ng-container *ngIf="!inputType">
+    <label class="m-0 p-0 font-weight-bold">{{ fieldName }}&nbsp;</label>
+    <div class="flex-1">{{ (currentValueDisplay) ? (currentValueDisplay) : (currentValue) }}&nbsp;</div>
+  </ng-container>
+  <ng-container *ngIf="inputType">
+    <ng-container *ngIf="inputType === InputFieldType.Text || inputType === InputFieldType.Number || inputType === InputFieldType.Email">
+      <label class="m-0 p-0 font-weight-bold" [for]="modelFieldName">{{ fieldName }}&nbsp;</label>
+      <div *ngIf="!isInputting" class="flex-1">
+        <div [ngClass]="{ 'border border-danger rounded': inputModel?.invalid }"
+             data-toggle="popover"
+             [title]="(inputModel?.invalid) ? (inputModel?.errors?.required ? (fieldName + ' is required.') : (fieldName + ' is invalid.')) : ''">
+          {{ (currentValueDisplay) ? (currentValueDisplay) : (currentValue) }}&nbsp;
+        </div>
+      </div>
+      <input [type]="inputType" [id]="modelFieldName" [name]="modelFieldName" [placeholder]="fieldName"
+             (blur)="cancelInput()"
+             [ngClass]="{ 'd-none': (!isInputting), 'flex-1 border-radius-25': (isInputting) }"
+             [required]="isRequired" (keyup)="changeValue($event, inputModel, inputElement)"
+             [maxlength]="maxLength"
+             [pattern]="pattern"
+             [email]="(inputType === InputFieldType.Email) ? true : false"
+             [(ngModel)]="currentValue" #inputModel="ngModel" #inputElement>
+      <i *ngIf="isUpdating" class="fa fa-spinner fa-spin p-2"></i>
+      <button *ngIf="isInputting && !isUpdating"
+              (mousedown)="cancelInput()"
+              class="action-button bg-white border-0">
+        <i class="fas fa-times text-danger p-1"></i>
+      </button>
+      <button *ngIf="isInputting && !isUpdating && !inputModel?.invalid && !inputModel?.errors?.required"
+              (mousedown)="updateInput(); $event.preventDefault()"
+              class="action-button bg-white border-0">
+        <i class="fas fa-check text-success p-1"></i>
+      </button>
+      <button *ngIf="!isInputting && !isUpdating" class="action-button bg-white border-0"
+              (click)="changeValue($event, inputModel, inputElement); editField()">
+        <i class="fas fa-pencil-alt p-1"></i>
+      </button>
+
+      <div *ngIf="isInputting && inputModel?.invalid" class="field-error-message">
+        <alert type="error">
+        <span class="text-white">
+           {{ errorMessage }}
+        </span>
+          <div class="form-error-arrow">
+            <div class="form-error-arrow-inner"></div>
+          </div>
+        </alert>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="inputType === InputFieldType.DropDown || inputType === InputFieldType.DropDownYesNo">
+      <label class="m-0 p-0 font-weight-bold" [for]="modelFieldName">{{ fieldName }}&nbsp;</label>
+      <div *ngIf="!isInputting" class="flex-1">
+        <div [ngClass]="{ 'border border-danger rounded': inputModel?.invalid }"
+             data-toggle="popover"
+             [title]="errorMessage">
+          <ng-container *ngIf="inputType === InputFieldType.Dropdown">{{ currentValueDisplay }}&nbsp;</ng-container>
+          <ng-container *ngIf="inputType === InputFieldType.DropdownYesNo">{{ (currentValue) ? 'Yes' : 'No' }}&nbsp;</ng-container>
+        </div>
+      </div>
+      <select [name]="modelFieldName" [id]="modelFieldName"
+              [ngClass]="{ 'd-none': !(isInputting), 'flex-1 m-0 m-0 border-radius-25 bg-white': (isInputting) }"
+              [(ngModel)]="currentValue"
+              (change)="selectById($event)"
+              [required]="isRequired"
+              #inputModel="ngModel" #inputElement>
+        <option [value]="null" disabled></option>
+        <option *ngFor="let option of listOptions | toArray" [value]="option.key">{{ option.value }}</option>
+      </select>
+      <i *ngIf="isUpdating" class="fa fa-spinner fa-spin p-2"></i>
+      <button *ngIf="isInputting && !isUpdating"
+              (mousedown)="cancelInput()"
+              class="action-button bg-white border-0">
+        <i class="fas fa-times text-danger p-1"></i>
+      </button>
+      <button *ngIf="isInputting && !isUpdating && !inputModel?.invalid && !inputModel?.errors?.required"
+              (mousedown)="updateInput(); $event.preventDefault()"
+              class="action-button bg-white border-0">
+        <i class="fas fa-check text-success p-1"></i>
+      </button>
+      <button *ngIf="!isInputting && !isUpdating" class="action-button bg-white border-0"
+              (click)="changeValue($event, inputModel, inputElement); editField()">
+        <i class="fas fa-pencil-alt p-1"></i>
+      </button>
+
+      <div *ngIf="isInputting && inputModel?.invalid" class="field-error-message">
+        <alert type="error">
+        <span class="text-white">
+           {{ errorMessage }}
+        </span>
+          <div class="form-error-arrow">
+            <div class="form-error-arrow-inner"></div>
+          </div>
+        </alert>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="inputType === InputFieldType.TextArea">
+      <label class="m-0 p-0 font-weight-bold" [for]="modelFieldName">{{ fieldName }}&nbsp;</label>
+      <div *ngIf="!isInputting" class="flex-1">
+        <div [ngClass]="{ 'border border-danger rounded': inputModel?.invalid }"
+             data-toggle="popover"
+             [title]="errorMessage">
+          {{ (currentValueDisplay) ? (currentValueDisplay) : (currentValue) }}&nbsp;
+        </div>
+      </div>
+      <textarea [id]="modelFieldName" [name]="modelFieldName" [placeholder]="fieldName"
+                [ngClass]="{ 'd-none': !(isInputting), 'flex-1 border-radius-25 bg-white': (isInputting) }"
+                [(ngModel)]="currentValue" #inputModel="ngModel" #inputElement>
+      </textarea>
+
+      <i *ngIf="isUpdating" class="fa fa-spinner fa-spin p-2"></i>
+      <button *ngIf="isInputting && !isUpdating"
+              (mousedown)="cancelInput()"
+              class="action-button bg-white border-0">
+        <i class="fas fa-times text-danger p-1"></i>
+      </button>
+      <button *ngIf="isInputting && !isUpdating && !inputModel?.invalid && !inputModel?.errors?.required"
+              (mousedown)="updateInput(); $event.preventDefault()"
+              class="action-button bg-white border-0">
+        <i class="fas fa-check text-success p-1"></i>
+      </button>
+      <button *ngIf="!isInputting && !isUpdating" class="action-button bg-white border-0"
+              (click)="changeValue($event, inputModel, inputElement); editField()">
+        <i class="fas fa-pencil-alt p-1"></i>
+      </button>
+
+      <div [ngClass]="{'d-none': !(isInputting && inputModel?.invalid) }" class="field-error-message">
+        <alert type="error">
+        <span class="text-white">
+           {{ errorMessage }}
+        </span>
+          <div class="form-error-arrow">
+            <div class="form-error-arrow-inner"></div>
+          </div>
+        </alert>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="inputType === InputFieldType.Date">
+      <label class="m-0 p-0 font-weight-bold" [for]="modelFieldName">{{ fieldName }}&nbsp;</label>
+      <div *ngIf="!isInputting" class="flex-1">
+        <div [ngClass]="{ 'border border-danger rounded': inputModel?.invalid }"
+             data-toggle="popover"
+             [title]="errorMessage">
+          {{ (currentValueDisplay) ? (currentValueDisplay) : (currentValue) }}&nbsp;
+        </div>
+      </div>
+
+
+    </ng-container>
+  </ng-container>
+</div>

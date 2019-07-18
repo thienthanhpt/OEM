@@ -1,0 +1,178 @@
+<data-table id="consumerChargesTable"
+            [items]="items" [itemCount]="items?.length || 0"
+            [pagination]="false"
+            [indexColumnHeader]="'#'"
+            [isRefreshable]="false"
+            [isColumnsSelectable]="false"
+            [substituteRows]="false"
+            [showReloading]="true"
+            [minHeight]="false">
+  <data-table-column [property]="'template.chargeTypeDisplay'" header="Charge Type"></data-table-column>
+  <data-table-column [property]="'template.displayName'" header="Name"></data-table-column>
+  <data-table-column [property]="'calculationTypeDisplay'" header="Calculation Type"></data-table-column>
+  <data-table-column [property]="'amount'" header="Amount"></data-table-column>
+  <data-table-column [property]="'createdTime.shortDate'" header="Application Date"></data-table-column>
+  <data-table-column *ngIf="!hideAction" header="Actions">
+    <ng-template #dataTableHeader let-item="item">
+      <i>Actions</i>
+    </ng-template>
+    <ng-template #dataTableCell let-item="item">
+      <button class="btn btn-primary btn-sm" (click)="initConsumerCharge(item.template?.chargeType, item); modal.open(consumerChargeModal, 'md')">
+        <i class="fas fa-edit"></i>
+      </button>
+      <button class="btn btn-danger btn-sm" (click)="consumerChargeToProcess = item; modal.open(removeConsumerChargeConfirmModal)">
+        <i class="fas fa-trash-alt"></i>
+      </button>
+    </ng-template>
+  </data-table-column>
+</data-table>
+
+<ng-template #consumerChargeModal>
+  <div class="modal-header">
+    <h4 class="modal-title pull-left">
+      <span *ngIf="modalAction === 'create'">
+        {{ { 'additional_charge': 'Add Charge', 'waive': 'Waive Charge', 'u_save': 'Add U-save' } | switch: modalChargeType }}
+      </span>
+      <span *ngIf="modalAction === 'update'">
+        {{ { 'additional_charge': 'Additional Charge', 'waive': 'Waive Charge', 'u_save': 'U-save' } | switch: modalChargeType }}
+      </span>
+    </h4>
+    <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div [loadingDisplay]="isChargeTemplateLoading" class="modal-body admin-crud-form">
+    <form action="" method="post" enctype="multipart/form-data" class="form-horizontal" #consumerChargeForm="ngForm">
+      <div *ngIf="modalChargeType !== ConsumerChargeType.USave" class="form-group row">
+        <label class="col-md-3 form-control-label required" for="consumerChargeTemplate">
+          {{ { 'additional_charge': 'Additional charge', 'waive': 'Charge to be waived' } | switch: modalChargeType }}
+        </label>
+        <div class="col-md-9">
+          <select name="consumerChargeTemplate" id="consumerChargeTemplate" class="form-control"
+                  [class.is-invalid]="consumerChargeTemplate?.touched && consumerChargeTemplate.invalid"
+                  required
+                  (change)="selectConsumerChargeTemplateById($event.target.value)"
+                  [ngModel]="consumerChargeToProcess.template?.id" #consumerChargeTemplate="ngModel">
+            <option [value]="null" disabled>
+              Please select a {{ { 'additional_charge': 'Additional Charge', 'waive': 'Waive Charge' } | switch: modalChargeType }}
+            </option>
+            <option *ngFor="let template of this.chargeTemplateList[modalChargeType]" [value]="template.id">{{ template.displayName }}</option>
+          </select>
+
+          <div *ngIf="consumerChargeTemplate?.touched && consumerChargeTemplate.invalid" class="invalid-feedback">
+
+            <div *ngIf="consumerChargeTemplate?.errors.required">
+              {{ { 'additional_charge': 'Additional Charge', 'waive': 'Waive Charge' } | switch: modalChargeType }} is required.
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div *ngIf="modalChargeType === ConsumerChargeType.USave" class="form-group row">
+        <label class="col-md-3 form-control-label" for="consumerMsslNo">MSSL No</label>
+        <div class="col-md-9">
+          <input name="meterId" id="consumerMsslNo" class="form-control" disabled
+                 [value]="consumer?.msslNo"/>
+        </div>
+      </div>
+
+      <div *ngIf="modalChargeType === ConsumerChargeType.USave" class="form-group row">
+        <label class="col-md-3 form-control-label" for="lastInvoiceUsagePeriod">Last Invoice Period</label>
+        <div class="col-md-9">
+          <input name="meterId" id="lastInvoiceUsagePeriod" class="form-control" disabled
+                 [value]="(lastInvoice)
+                            ? (lastInvoice?.usageFromDate.short || 'Unknown') + '   ---   ' + (lastInvoice?.usageToDate.short || 'unknown')
+                            : 'No invoice has been generated yet.'"/>
+        </div>
+      </div>
+
+      <div *ngIf="modalChargeType === ConsumerChargeType.USave" class="form-group row">
+        <label class="col-md-3 form-control-label" for="lastInvoiceChargeableAmount">Last Invoice Chargeable Amount</label>
+        <div class="col-md-9">
+          <input name="meterId" id="lastInvoiceChargeableAmount" class="form-control" disabled
+                 [value]="lastInvoice?.totalAmount"/>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-md-3 form-control-label required" for="calculationType">Calculation Type</label>
+        <div class="col-md-9">
+          <select name="calculationType" id="calculationType" class="form-control"
+                  [class.is-invalid]="calculationType.touched && calculationType.invalid"
+                  [(ngModel)]="consumerChargeToProcess.calculationType" #calculationType="ngModel">
+            <option *ngFor="let option of discountTypeOptions | toArray" [value]="option.key">{{ option.value }}</option>
+          </select>
+
+          <div *ngIf="calculationType.touched && calculationType.invalid" class="invalid-feedback">
+
+            <div *ngIf="calculationType?.errors.required">
+              CalculationType is required.
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-md-3 form-control-label required" for="consumerChargeAmount">
+          {{ (modalChargeType === ConsumerChargeType.USave) ? 'U-save to be applied' : 'Amount' }}
+        </label>
+        <div class="col-md-9">
+          <input name="meterId" id="consumerChargeAmount" class="form-control" placeholder="Amount" type="number"
+                 [class.is-invalid]="consumerChargeAmount.touched && consumerChargeAmount.invalid"
+                 required
+                 [pattern]="(consumerChargeToProcess.calculationType === DiscountType.Percent) ? (adminConfig.validation.zeroToOne) : (
+                             (modalChargeType === ConsumerChargeType.Waive) ? (adminConfig.validation.decimalPattern) : (adminConfig.validation.positiveDecimalPattern)
+                             )"
+                 [(ngModel)]="consumerChargeToProcess.amount" #consumerChargeAmount="ngModel"/>
+          <div *ngIf="modalChargeType !== ConsumerChargeType.Waive" class="text-muted small">
+            {{ consumerChargeToProcess.calculationType === DiscountType.Percent ? 'Please input number in range 0 - 1.' : 'Please input positive decimal.' }}
+          </div>
+          <div *ngIf="consumerChargeAmount.touched && consumerChargeAmount.invalid" class="invalid-feedback">
+
+            <div *ngIf="consumerChargeAmount?.errors.required">
+              Amount is required.
+            </div>
+            <div *ngIf="consumerChargeAmount?.errors.pattern">
+              {{ consumerChargeToProcess.calculationType === DiscountType.Percent ? 'Amount should be 0 to 1.' : 'Amount should be above 0.' }}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="row">
+      <div class="col-md-12 my-3">
+        <i>This action will apply to the next bill of the consumer.</i>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-md mr-auto" (click)="modal.hide()">Back</button>
+    <button type="button" [ngClass]="['btn btn-md', modalAction === 'create' ? 'btn-success' : 'btn-primary']"
+            [disabled]="!consumerChargeForm.form.valid"
+            (click)="onConsumerChargeSubmit()">
+      <span class="font-weigh-bold">{{ modalAction === 'create' ? 'Add' : 'Save' }}</span>
+    </button>
+  </div>
+</ng-template>
+
+<ng-template #removeConsumerChargeConfirmModal>
+  <div class="modal-header d-none">
+    <h4 class="modal-title text-center">
+      Confirmation
+    </h4>
+  </div>
+  <div class="modal-body">
+    <p>Are you sure to remove this charge?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary mr-auto" (click)="modal.hide()">Cancel</button>
+    <button type="button" class="btn btn-danger" (click)="onRemoveConsumerCharge()">Yes</button>
+  </div>
+</ng-template>

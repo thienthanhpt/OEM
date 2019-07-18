@@ -1,0 +1,925 @@
+<div class="card">
+  <div class="card-header">
+    <div class="float-right">
+      <a class="btn btn-md btn-secondary" [routerLink]="[linkToList()]"><i class="fa fa-chevron-circle-left"></i> Return to List</a>
+      <a class="btn btn-md btn-secondary" href="javascript:void(0)" *ngIf="hasBackHistory" (click)="goBack()"><i class="fa fa-chevron-circle-left"></i> Back</a>
+      <!--<button type="button" [loadingDisable]="isLoading" [displaySpinner]="true"-->
+              <!--class="btn btn-danger"-->
+              <!--*ngIf="!is('new') && model.status !== ConsumerStatus.Deactivated"-->
+              <!--(click)="initDeactivateConfirm(); modal.open(deactivateConfirmModal, 'md')">-->
+        <!--<i class="fas fa-minus-circle"></i> Deactivate-->
+      <!--</button>-->
+      <button type="button" [loadingDisable]="isLoading" [displaySpinner]="true"
+              class="btn btn-success"
+              *ngIf="!is('new') && model.status === ConsumerStatus.TransferredIn"
+              (click)="openCreateConsumerChargeModal(ConsumerChargeType.Additional)">
+        <i class="fas fa-plus-circle"></i> Add Charge
+      </button>
+      <button type="button" [loadingDisable]="isLoading" [displaySpinner]="true"
+              class="btn btn-success"
+              *ngIf="!is('new') && model.status === ConsumerStatus.TransferredIn"
+              (click)="openCreateConsumerChargeModal(ConsumerChargeType.Waive)">
+        <i class="fas fa-plus-circle"></i> Waive Charge
+      </button>
+      <button type="button" [loadingDisable]="isLoading" [displaySpinner]="true"
+              class="btn btn-success"
+              *ngIf="!is('new') && model.status === ConsumerStatus.TransferredIn"
+              (click)="openCreateConsumerChargeModal(ConsumerChargeType.USave)">
+        <i class="fas fa-plus-circle"></i> U-save
+      </button>
+      <button type="submit" [loadingDisable]="isLoading" [displaySpinner]="true"
+              *ngIf="!is('detail')"
+              [ngClass]="['btn btn-md', is('new') ? 'btn-success' : 'btn-primary']"
+              (click)="modelForm.ngSubmit.emit()"
+              [disabled]="!modelForm.form.valid">
+        <i class="fas fa-check-circle"></i> {{ is('new') ? 'Add' : 'Save' }}
+      </button>
+      <button type="button" *ngIf="is('new')" [loadingDisable]="isLoading" [displaySpinner]="true"
+              [ngClass]="['btn btn-md', is('new') ? 'btn-success' : 'btn-primary']"
+              (click)="redirectToCreateContract = true; modelForm.ngSubmit.emit()"
+              [disabled]="!modelForm.form.valid">
+        <i class="fas fa-check-circle"></i>Add & Create Contract
+      </button>
+      <a class="btn btn-md btn-primary"
+         *ngIf="is('detail') && model.status !== ConsumerStatus.Deactivated && isAccessible(PageAccess.Edit)"
+         [routerLink]="['../edit']" [queryParams]="getHistoryParams()">
+        <i class="fas fa-edit"></i> Edit
+      </a>
+    </div>
+  </div>
+
+  <div [loadingDisplay]="isLoading">
+    <div *ngIf="is('detail')" class="card-body" style="background-color: #f0f3f5">
+      <h5 class="border-bottom mb-4 pb-1 clearfix">
+        Customer
+      </h5>
+      <div class="form-group row">
+        <div class="col-md-6">
+          <div class="row">
+            <label class="col-md-4 mb-3 form-control-label">Customer Name</label>
+            <div class="col-md-8 mb-3">
+              <input type="text" class="form-control" disabled
+                     [value]="customer?.name">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6" *ngIf="!checkCustomerType()">
+          <div class="row">
+            <label class="col-md-4 mb-3 form-control-label">Address</label>
+            <div class="col-md-8 mb-3">
+              <input type="text" class="form-control" disabled
+                     [value]="model.premiseAddress">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6" *ngIf="!checkCustomerType()">
+          <div class="row">
+            <label class="col-md-4 mb-3 form-control-label">UEN/ACRA</label>
+            <div class="col-md-8 mb-3">
+              <input type="text" class="form-control" disabled
+                     [value]="customer?.identificationNo">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6" *ngIf="!checkCustomerType()">
+          <div class="row">
+            <label class="col-md-4 mb-3 form-control-label">Postal Code</label>
+            <div class="col-md-8 mb-3">
+              <input type="text" class="form-control" disabled
+                     [value]="model.premisePostalCode">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6" *ngIf="!checkCustomerType()">
+          <div class="row">
+            <label class="col-md-4 mb-3 form-control-label">Customer Type</label>
+            <div class="col-md-8 mb-3">
+              <input type="text" class="form-control" disabled
+                     [value]="customer?.typeDisplay">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="row">
+            <label class="col-md-4 mb-3 form-control-label">Sunseap Account No</label>
+            <div class="col-md-8 mb-3">
+              <input type="text" class="form-control" disabled
+                     [value]="customer?.spAccountNo">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6" *ngIf="!checkCustomerType()">
+          <div class="row">
+            <label class="col-md-4 mb-3 form-control-label">Email</label>
+            <div class="col-md-8 mb-3">
+              <input type="text" class="form-control" disabled
+                     [value]="customer?.emailAddress">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6" *ngIf="!checkCustomerType()">
+          <div class="row">
+            <label class="col-md-4 mb-3 form-control-label">Mobile Phone</label>
+            <div class="col-md-8 mb-3">
+              <input type="text" class="form-control" disabled
+                     [value]="customer?.mobilePhone">
+            </div>
+          </div>
+        </div>
+      </div><!-- /form-group -->
+    </div><!-- /card-body -->
+
+    <form action="" method="post" enctype="multipart/form-data" class="form-horizontal"
+          [class.admin-crud-form]="!is('detail')"
+          (ngSubmit)="onSubmit()"
+          #modelForm="ngForm">
+      <!-- New -->
+      <div *ngIf="!is('detail')" class="card-body block-loading" [class.is-loading]="isCustomerLoading">
+        <h5 class="border-bottom mb-4 pb-1">
+          Customer
+        </h5>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="customer">Customer Name</label>
+          <div class="col-md-4">
+            <select name="customer" id="customer" class="form-control"
+                    [class.is-invalid]="customer.touched && customer.invalid"
+                    required
+                    [ngModel]="model.customerId"
+                    (change)="selectCustomerName($event.target.value)" #customer="ngModel">
+              <option *ngIf="is('new')" [value]="null" disabled>Please select a Customer Name</option>
+              <option *ngFor="let customer of customerList" [value]="customer.id">{{ customer.name }}</option>
+            </select>
+
+            <div *ngIf="customer.touched && customer.invalid" class="invalid-feedback">
+
+              <div *ngIf="customer?.errors.required">
+                Customer Name is required.
+              </div>
+
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label">Sunseap Account No</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.customer?.spAccountNo">
+
+          </div>
+        </div>
+
+        <div class="form-group row"
+             *ngIf="!is('detail') && model.customer?.type === CustomerType.Residential">
+          <label class="col-md-2 form-control-label" for="landlordAccount">Landlord Account</label>
+          <div class="col-md-4">
+            <input type="text" id="landlordAccount" name="landlordAccount" class="form-control"
+                   placeholder="Landlord Account"
+                   [class.is-invalid]="landlordAccount.touched && landlordAccount.invalid"
+                   [disabled]="is('detail')"
+                   maxlength="16" [pattern]="adminConfig?.validation.alphaNumeric"
+                   [(ngModel)]="model.landlordAccount" #landlordAccount="ngModel">
+
+            <div *ngIf="landlordAccount.touched && landlordAccount.invalid" class="invalid-feedback">
+
+              <div *ngIf="landlordAccount?.errors.maxlength">
+                Landlord Account is limited to 16 characters.
+              </div>
+              <div *ngIf="landlordAccount?.errors.pattern">
+                Landlord Account MUST has no special character.
+              </div>
+
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label" for="temporaryDisconnected">Temporary Disconnected</label>
+          <div class="col-md-4">
+            <select *ngIf="!is('detail')" name="temporaryDisconnected" id="temporaryDisconnected" class="form-control"
+                    [class.is-invalid]="temporaryDisconnected.touched && temporaryDisconnected.invalid"
+                    [(ngModel)]="model.temporaryDisconnected" #temporaryDisconnected="ngModel">
+              <option [ngValue]="false" selected>No</option>
+              <option [ngValue]="true">Yes</option>
+            </select>
+          </div>
+        </div>
+
+      </div><!-- /card-body -->
+
+      <div class="card-body">
+        <h5 class="border-bottom mb-4 pb-1 clearfix">
+          <div class="float-left">
+            Consumer
+          </div>
+          <div class="float-right font-lg" *ngIf="!is('new')">
+              <label>Status:</label>
+              <span class="badge badge-primary badge-status">
+                {{ this.model.statusDisplay || 'null' }}
+              </span>
+          </div>
+        </h5>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label" for="name">Consumer Name</label>
+          <div class="col-md-4">
+            <ng-container *ngIf="!is('detail')">
+              <input type="text" id="name" name="name" class="form-control" placeholder="Consumer Name"
+                     [class.is-invalid]="name.touched && name.invalid"
+                     readonly
+                     [(ngModel)]="model.name" #name="ngModel">
+
+              <div *ngIf="name.touched && name.invalid" class="invalid-feedback">
+
+                <div *ngIf="name?.errors.required">
+                  Consumer Name is required.
+                </div>
+
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="is('detail')">
+              <input class="form-control" disabled [value]="model.name || model.premiseAddress">
+            </ng-container>
+          </div>
+
+          <label *ngIf="!is('new')" class="col-md-2 form-control-label" for="sh-billing-acc">Starhub Account No</label>
+          <div *ngIf="!is('new')" class="col-md-4">
+            <input type="text" id="sh-billing-acc" name="sh-billing-acc" class="form-control"
+                   placeholder="Starhub Account No"
+                   [class.is-invalid]="shBillingAccount.touched && shBillingAccount.invalid"
+                   [disabled]="is('detail')"
+                   [(ngModel)]="model.shBillingAccount" #shBillingAccount="ngModel">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="premiseAddress">Premise Address</label>
+          <div class="col-md-4">
+            <input type="text" id="premiseAddress" name="premiseAddress" class="form-control"
+                   placeholder="Premise Address"
+                   [class.is-invalid]="premiseAddress.touched && premiseAddress.invalid"
+                   [disabled]="is('detail')"
+                   required
+                   [(ngModel)]="model.premiseAddress" #premiseAddress="ngModel">
+
+            <div *ngIf="premiseAddress.touched && premiseAddress.invalid" class="invalid-feedback">
+
+              <div *ngIf="premiseAddress?.errors.required">
+                Premise Address is required.
+              </div>
+
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label required" for="premisePostalCode">Premise Postal Code</label>
+          <div class="col-md-4">
+            <input type="text" id="premisePostalCode" name="premisePostalCode" class="form-control"
+                   placeholder="Premise Postal Code"
+                   [class.is-invalid]="premisePostalCode.touched && premisePostalCode.invalid"
+                   [disabled]="is('detail')"
+                   required maxlength="8" pattern="^[0-9]*$"
+                   [(ngModel)]="model.premisePostalCode" #premisePostalCode="ngModel">
+
+            <div *ngIf="premisePostalCode.touched && premisePostalCode.invalid" class="invalid-feedback">
+
+              <div *ngIf="premisePostalCode?.errors.required">
+                Premise Postal Code is required.
+              </div>
+              <div *ngIf="premisePostalCode?.errors.maxlength">
+                Premise Postal Code is limited to 8 characters.
+              </div>
+              <div *ngIf="premisePostalCode?.errors.pattern">
+                Premise Postal Code MUST contains only numbers.
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="msslNo">MSSL No</label>
+          <div class="col-md-4">
+            <input type="text" id="msslNo" name="msslNo" class="form-control" placeholder="MSSL No"
+                   [class.is-invalid]="msslNo.touched && msslNo.invalid"
+                   [disabled]="is('detail')"
+                   required maxlength="16" [pattern]="adminConfig?.validation.ebsNo"
+                   [(ngModel)]="model.msslNo" #msslNo="ngModel">
+
+            <div *ngIf="msslNo.touched && msslNo.invalid" class="invalid-feedback">
+
+              <div *ngIf="msslNo?.errors.required">
+                MSSL No is required.
+              </div>
+              <div *ngIf="msslNo?.errors.maxlength">
+                MSSL No is limited to 16 characters.
+              </div>
+              <div *ngIf="msslNo?.errors.pattern">
+                MSSL No MUST has no special character.
+              </div>
+
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label required" for="ebsNo">EBS No</label>
+          <div class="col-md-4">
+            <input type="text" id="ebsNo" name="ebsNo" class="form-control" placeholder="EBS No"
+                   [class.is-invalid]="ebsNo.touched && ebsNo.invalid"
+                   [disabled]="is('detail')"
+                   required maxlength="16" [pattern]="adminConfig?.validation.ebsNo"
+                   [(ngModel)]="model.ebsNo" #ebsNo="ngModel">
+
+            <div *ngIf="ebsNo.touched && ebsNo.invalid" class="invalid-feedback">
+
+              <div *ngIf="ebsNo?.errors.required">
+                EBS No is required.
+              </div>
+
+              <div *ngIf="ebsNo?.errors.maxlength">
+                EBS No is limited to 16 characters.
+              </div>
+
+              <div *ngIf="ebsNo?.errors.pattern">
+                EBS No is invalid.
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <!--todo: this meter id is used temporarily before clear requirement, need to remove in next release-->
+          <label class="col-md-2 form-control-label" for="meterIdTemp">Meter ID</label>
+          <div class="col-md-4">
+            <input type="text" id="meterIdTemp" name="meterIdTemp" class="form-control" placeholder="Meter ID"
+                   [disabled]="is('detail')"
+                   [(ngModel)]="model.meterId" #meterIdTemp="ngModel">
+          </div>
+
+          <label class="col-md-2 form-control-label required" for="voltageType">Voltage Type</label>
+          <div class="col-md-4">
+            <ng-container *ngIf="!is('detail')">
+              <select name="voltageType" id="voltageType" class="form-control"
+                      [class.is-invalid]="voltageType.touched && voltageType.invalid"
+                      required
+                      [(ngModel)]="model.voltageType" #voltageType="ngModel">
+                <option *ngIf="is('new')" [ngValue]="null" disabled>Please select a Voltage Type</option>
+                <option *ngFor="let option of voltageTypeOptions | toArray" [ngValue]="option.key">{{ option.value }}</option>
+              </select>
+
+              <div *ngIf="voltageType.touched && voltageType.invalid" class="invalid-feedback">
+
+                <div *ngIf="voltageType?.errors.required">
+                  Voltage Type is required.
+                </div>
+
+              </div>
+            </ng-container>
+            <input type="text" *ngIf="is('detail')" class="form-control" disabled
+                   [value]="model.voltageTypeDisplay">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label" for="accountType">Account Type</label>
+          <div class="col-md-4">
+            <select *ngIf="!is('detail')" name="accountType" id="accountType" class="form-control"
+                    [class.is-invalid]="accountType.touched && accountType.invalid"
+                    [(ngModel)]="model.accountType" #accountType="ngModel">
+              <option *ngIf="is('new')" [ngValue]="null" disabled>Please select a Account Type</option>
+              <option *ngFor="let option of accountTypeOptions | toArray" [ngValue]="option.key">{{ option.value }}</option>
+            </select>
+
+            <input type="text" *ngIf="is('detail')" class="form-control" disabled
+                   [value]="model.accountTypeDisplay">
+          </div>
+
+          <label *ngIf="!is('new')" class="col-md-2 form-control-label">Dwelling type</label>
+          <div *ngIf="!is('new')" class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.dwellingType">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label" for="remarks">Remarks</label>
+          <div class="col-md-4">
+            <textarea id="remarks" name="remarks" class="form-control" placeholder="Remarks"
+                      [class.is-invalid]="remarks.touched && remarks.invalid"
+                      [disabled]="is('detail')"
+                      [(ngModel)]="model.remarks" #remarks="ngModel">
+            </textarea>
+          </div>
+
+          <label class="col-md-2 form-control-label" for="ebsNo">Referral Code</label>
+          <div class="col-md-4">
+            <input type="text" id="referralCode" name="referralCode" class="form-control" placeholder="Referral code"
+                   [disabled]="is('detail')"
+                   [(ngModel)]="model.referralCode" #referralCode="ngModel">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Document</label>
+          <div class="col-md-4">
+            <div *ngFor="let document of model.lastRetailerBillDocuments">
+              <a [href]="document.fullFilePath">{{ document.displayName }}</a>
+            </div>
+            <div *ngIf="model.lastRetailerBillDocuments?.length == 0">No document uploaded</div>
+            <button *ngIf="!is('new')" type="button" class="btn btn-md btn-success"
+                    (click)="modal.open(uploadFilesModal, 'lg')">
+              <i class="fa fa-upload"></i> Upload document
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="is('detail')" class="form-group row">
+          <label class="col-md-2 form-control-label">Creation Time</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.createdTime.short">
+
+          </div>
+
+          <label class="col-md-2 form-control-label">Last Update Time</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.updatedTime.short">
+
+          </div>
+        </div>
+      </div><!-- /card-body -->
+      <!-- Old -->
+    </form>
+    <!-- End Create/Edit -->
+
+    <div *ngIf="!is('new')" class="card-body">
+      <tabset>
+        <tab heading="Meters" id="consumer-meters-tab">
+          <data-table id="consumerMetersTable"
+                      [items]="meters" [itemCount]="meterCount"
+                      [indexColumnHeader]="'#'" [substituteRows]="false">
+            <data-table-column [property]="'meterId'" header="Meter ID"></data-table-column>
+            <data-table-column [property]="'typeDisplay'" header="Meter Type"></data-table-column>
+            <data-table-column [property]="'statusDisplay'" header="Meter Status"></data-table-column>
+            <data-table-column header="Actions">
+              <ng-template #dataTableHeader let-item="item">
+                <i>Actions</i>
+              </ng-template>
+              <ng-template #dataTableCell let-item="item">
+                <button class="btn btn-primary btn-sm" (click)="initConsumerMeter(item); modal.open(consumerMeterModal, 'md')">
+                  <i class="fas fa-edit"></i>
+                </button>
+              </ng-template>
+            </data-table-column>
+          </data-table>
+          <button class="btn btn-success mt-2" (click)="initConsumerMeter(); modal.open(consumerMeterModal, 'md')">
+            Create Meter
+          </button>
+        </tab>
+
+        <tab heading="Meter Reading" id="meter-readings-tab">
+          <data-table id="meterReadingTable"
+                      [items]="usageDataMeters" [itemCount]="usageDataMeterCount"
+                      [limit]="usageDataMeterPagination.limit"
+                      [sortBy]="usageDataMeterPagination.sortBy" [sortAsc]="usageDataMeterPagination.sortAsc"
+                      [isRefreshable]="true" [isColumnsSelectable]="true"
+                      [indexColumnHeader]="'#'" [substituteRows]="false"
+                      (reload)="reloadMeterReadings($event)">
+            <data-table-column [property]="'usageDataFile.document.displayName'" header="File Name"></data-table-column>
+            <data-table-column [property]="'meter.meterId'" header="Meter IDs"></data-table-column>
+            <data-table-column [property]="'usageDataFile.createdTime.shortDate'" header="Upload Date"></data-table-column>
+            <data-table-column header="Usage Date">
+              <ng-template #dataTableCell let-item="item">
+                <div *ngIf="(item.usageFromDate.short !== null) || (item.usageToDate.short !== null)">
+                  {{ item.usageFromDate.short }} - {{ item.usageToDate.short }}
+                </div>
+              </ng-template>
+            </data-table-column>
+            <data-table-column header="Actions">
+              <ng-template #dataTableHeader let-item="item">
+                <i>Actions</i>
+              </ng-template>
+              <ng-template #dataTableCell let-item="item">
+                <a class="btn btn-primary btn-sm" [href]="item.usageDataFile?.document?.fullFilePath" download>
+                  <i class="fas fa-download"></i>
+                </a>
+              </ng-template>
+            </data-table-column>
+          </data-table>
+        </tab>
+
+        <tab heading="Contracts" id="contracts-tab">
+          <data-table id="contractsTable"
+                      [items]="contracts" [itemCount]="contractCount"
+                      [limit]="contractPagination.limit"
+                      [sortBy]="contractPagination.sortBy" [sortAsc]="contractPagination.sortAsc"
+                      [isRefreshable]="true" [isColumnsSelectable]="true"
+                      [indexColumnHeader]="'#'" [substituteRows]="false"
+                      (reload)="reloadContracts($event)">
+            <data-table-column [property]="'commissionedDate.short'" header="Start Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'plannedEndDate.short'" header="Contract End Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'actualEndDate.short'" header="Contract Actual End Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'pricingPlanName'" header="Pricing Name" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'rate'" header="Rate / Discount (%)" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.signUpRate | percentage: false }} / {{ item.discountPercentage | percentage: false }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'status'" header="Contract Status" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+                <span class="h5">
+                  <span class="badge" [ngClass]="{ 'badge-success': item.status === ContractStatus.Active,
+                                               'badge-secondary': item.status === ContractStatus.Inactive,
+                                               'badge-primary': item.status === ContractStatus.Submitted,
+                                               'badge-warning': item.status === ContractStatus.Terminated}">
+                    {{ item.statusDisplay }}
+                  </span>
+                </span>
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'documentNamesDisplay'" header="Documents"></data-table-column>
+            <data-table-column [property]="'latePaymentRate'" header="Late Payment Rate (%)" [visible]="false" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.latePaymentRate | percentage: false }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'offPeakRate'" header="Off Peak Rate (%)" [visible]="false" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.offPeakRate | percentage: false }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'billingPeriod.frequency'" header="Billing Period" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'paymentMode.paymentMode'" header="Payment Mode" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'paymentTermNumber'" header="Payment Term" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'termNumber'" header="Contract Term" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'threeMonthAverageConsumption'" header="Three Month Average Consumption" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'specialRequest'" header="Special Request" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'loadProfile'" header="Load Profile" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'isHardCopyRequested'" header="Hard Copy Requested" [visible]="false" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.isHardCopyRequested | booleans }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'isTlfIncluded'" header="TLF Included" [visible]="false" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.isTlfIncluded | booleans }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'billingAddress'" header="Billing Address" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'billingPostalCode'" header="Billing Postal Code" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'cleanEnergyPercentage'" header="Clean Energy (%)" [visible]="false" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.cleanEnergyPercentage | percentage: false }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'signedDate.short'" header="Contract Signed Date" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'createdTime.short'" header="Created Time" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'updatedTime.short'" header="Last Updated Time" [visible]="false" [sortable]="true"></data-table-column>
+            <data-table-column header="Actions">
+              <ng-template #dataTableHeader let-item="item">
+                <i>Actions</i>
+              </ng-template>
+              <ng-template #dataTableCell let-item="item">
+                <a class="btn btn-primary btn-sm" [routerLink]="['../../../contracts', item.id, 'detail']" [queryParams]="getHistoryParams()"><i class="fas fa-eye"></i></a>
+                <a class="btn btn-primary btn-sm" [routerLink]="['../../../contracts', item.id, 'edit']" [queryParams]="getHistoryParams()"><i class="fas fa-edit"></i></a>
+                <a class="btn btn-primary btn-sm" href="javascript:void(0)" (click)="setListFilter('contract', item)"><i class="fas fa-filter"></i></a>
+                <a *ngIf="item.documents?.length == 1" class="btn btn-primary btn-sm" [href]="item.documents[0].fullFilePath" download>
+                  <i class="fas fa-download"></i>
+                </a>
+                <a *ngIf="item.documents?.length > 1" href="javascript:void(0)" class="btn btn-primary btn-sm"
+                   (click)="documentsToDownload = item.documents; modal.open(documentsDownloadModal)">
+                  <i class="fas fa-download"></i>
+                </a>
+              </ng-template>
+            </data-table-column>
+          </data-table>
+          <a class="btn btn-success mt-3" [routerLink]="['../../../contracts/new']" [queryParams]="getHistoryParams({consumerId: model.id})">
+            Create contract
+          </a>
+        </tab>
+
+        <tab id="invoices-tab">
+          <ng-template tabHeading>
+            Invoices <sup *ngIf="listFilter.contractId"><i class="fas fa-star"></i></sup>
+          </ng-template>
+
+          <div class="row">
+            <div class="col-12">
+              <div *ngIf="listFilter.contractId" class="btn disabled bg-gray-200 text-dark" style="font-size: 1rem;">
+                <a href="javascript:void(0)" class="text-dark mr-2" (click)="removeListFilter('contract')">
+                  <i class="fas fa-times"></i>
+                </a>
+                <span>Filter: {{ listFilter.contractId }}</span>
+              </div>
+            </div>
+          </div>
+
+          <data-table id="invoicesTable"
+                      [items]="invoices" [itemCount]="invoiceCount"
+                      [limit]="invoicePagination.limit"
+                      [sortBy]="invoicePagination.sortBy" [sortAsc]="invoicePagination.sortAsc"
+                      [isRefreshable]="true" [isColumnsSelectable]="true" [indexColumnHeader]="'#'" [substituteRows]="false"
+                      (reload)="reloadInvoices($event)">
+            <data-table-column [property]="'no'" header="Invoice No" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'usageToDate'" header="Invoice Period" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+              <span *ngIf="item.usageFromDate.short || item.usageToDate.short">
+                {{ item.usageFromDate.short }} - {{ item.usageToDate.short }}
+              </span>
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'invoiceDate.short'" header="Invoice Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'totalAmount'" header="Total Amount" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+              <span>
+                {{ item.totalAmount | number: adminConfig.numberPipe }}
+              </span>
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'dueDate.short'" header="Due Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'usageAmount'" header="Usage Amount" [sortable]="true">
+              <ng-template #dataTableCell let-item="item">
+              <span>
+                {{ item.usageAmount | number: adminConfig.numberPipe }}
+              </span>
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'documentNamesDisplay'" header="Documents"></data-table-column>
+            <data-table-column [property]="'pricingPlanName'" header="Pricing Name'"></data-table-column>
+            <data-table-column [property]="'rate'" header="Rate / Discount (%)" [visible]="false">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.rate | percentage: false }} / {{ item.discountPercentage | percentage: false }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'cleanEnergyPercentage'" header="Clean Energy (%)" [visible]="false"></data-table-column>
+            <data-table-column [property]="'offPeakRate'" header="Off Peak Rate (%)" [visible]="false">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.offPeakRate | percentage: false }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'dueDate.short'" header="Invoice Due Date" [visible]="false"></data-table-column>
+            <data-table-column [property]="'oldBalance'" header="Outstanding Balance Before Invoice" [visible]="false"></data-table-column>
+            <data-table-column [property]="'newBalance'" header="New Outstanding Balance" [visible]="false"></data-table-column>
+            <data-table-column [property]="'latePaymentCharge'" header="Late Payment Charges" [visible]="false"></data-table-column>
+            <data-table-column [property]="'netAmount'" header="Amount before GST" [visible]="false"></data-table-column>
+            <data-table-column [property]="'gstAmount'" header="GST Amount" [visible]="false"></data-table-column>
+            <data-table-column [property]="'rebate'" header="Rebate" [visible]="false"></data-table-column>
+            <data-table-column [property]="'totalAmount'" header="Total Amount Payable" [visible]="false"></data-table-column>
+            <data-table-column [property]="'peakConsumption'" header="Peak Period Consumption" [visible]="false">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.peakConsumption | percentage: false }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'offPeakConsumption'" header="Off Peak Period Consumption" [visible]="false">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.offPeakConsumption | percentage: false }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'remarks'" header="Remarks" [visible]="false"></data-table-column>
+            <data-table-column [property]="'url'" header="URL" [visible]="false"></data-table-column>
+            <data-table-column [property]="'createdTime.short'" header="Created Time" [visible]="false"></data-table-column>
+            <data-table-column [property]="'updatedTime.short'" header="Last Updated Time" [visible]="false"></data-table-column>
+            <data-table-column header="Actions">
+              <ng-template #dataTableHeader let-item="item">
+                <i>Actions</i>
+              </ng-template>
+              <ng-template #dataTableCell let-item="item">
+                <a class="btn btn-primary btn-sm" [routerLink]="['../../../invoices', item.id, 'detail']" [queryParams]="getHistoryParams()"><i class="fas fa-edit"></i></a>
+                <a *ngIf="item.documents?.length == 1" class="btn btn-primary btn-sm" [href]="item.documents[0].fullFilePath" download>
+                  <i class="fas fa-download"></i>
+                </a>
+                <a *ngIf="item.documents?.length > 1" href="javascript:void(0)" class="btn btn-primary btn-sm"
+                   (click)="documentsToDownload = item.documents; modal.open(documentsDownloadModal)">
+                  <i class="fas fa-download"></i>
+                </a>
+              </ng-template>
+            </data-table-column>
+          </data-table>
+        </tab>
+
+        <tab heading="Unpaid Charges" id="consumerChargesTab">
+          <admin-consumer-charge-table [consumer]="model"></admin-consumer-charge-table>
+        </tab>
+
+        <tab heading="Documents">
+          <data-table id="documentsTable"
+                      [items]="model.documents"
+                      [substituteRows]="false" [pagination]="false"
+                      [isRefreshable]="true"
+                      [indexColumnHeader]="'#'" [minHeight]="true"
+                      (reload)="reloadDocuments()">
+            <data-table-column [property]="'displayName'" header="Title"></data-table-column>
+            <data-table-column header="Actions">
+              <ng-template #dataTableHeader let-item="item">
+                <i>Actions</i>
+              </ng-template>
+              <ng-template #dataTableCell let-item="item">
+                <div class="d-flex justify-content-center">
+                  <a *ngIf="item.filePath" class="btn btn-primary mr-2" [href]="item.fullFilePath">
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <button *ngIf="isPreviewDocumentSupport(item)" type="button" class="btn btn-primary"
+                          (click)="documentToPreview = item; modal.open(previewDocument, 'lg');">
+                    <i class="far fa-file-alt"></i>
+                  </button>
+                </div>
+              </ng-template>
+            </data-table-column>
+          </data-table>
+          <button type="button" class="btn btn-md btn-success" (click)="modal.open(uploadFilesModal, 'lg')">
+            <i class="fa fa-upload"></i> Upload Document
+          </button>
+        </tab>
+      </tabset>
+    </div>
+
+    <ng-template #documentsDownloadModal>
+      <div class="modal-body">
+
+        <div class="form-group row">
+          <div class="col-md-12">
+            <ul class="list-group">
+              <li *ngFor="let document of documentsToDownload" class="list-group-item">
+                <a [href]="document.fullFilePath" download>{{ document.displayName }}</a>
+                <button *ngIf="document.filePath.includes('.pdf')
+                               || document.filePath.includes('.png')
+                               || document.filePath.includes('.jpg')
+                               || document.filePath.includes('.jpeg')" type="button" class="btn btn-primary btn-sm"
+                        (click)="documentToPreview = document; modal.open(previewDocument, 'lg');">
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </ng-template>
+  </div>
+
+  <ng-template #consumerMeterModal>
+    <div class="modal-body admin-crud-form">
+      <div class="form-group row">
+        <label class="col-md-3 form-control-label required" for="meterId">Meter ID</label>
+        <div class="col-md-9">
+          <input name="meterId" id="meterId" class="form-control" placeholder="Meter ID"
+                 [class.is-invalid]="meterId.touched && meterId.invalid"
+                 required
+                 [(ngModel)]="consumerMeterToProcess.meterId" #meterId="ngModel"/>
+
+          <div *ngIf="meterId.touched && meterId.invalid" class="invalid-feedback">
+
+            <div *ngIf="meterId?.errors.required">
+              Meter ID is required.
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-md-3 form-control-label required" for="meterType">Meter Type</label>
+        <div class="col-md-9">
+          <select name="meterType" id="meterType" class="form-control"
+                  [class.is-invalid]="meterType?.touched && meterType.invalid"
+                  required
+                  [(ngModel)]="consumerMeterToProcess.type" #meterType="ngModel">
+            <option [value]="null" disabled>Please select a Type</option>
+            <option *ngFor="let option of consumerMeterTypeOptions | toArray" [value]="option.key">{{ option.value }}</option>
+          </select>
+
+          <div *ngIf="meterType?.touched && meterType.invalid" class="invalid-feedback">
+
+            <div *ngIf="meterType?.errors.required">
+              Meter Type is required.
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-md mr-auto" (click)="modal.hide()">Back</button>
+      <button type="button" class="btn btn-md btn-primary"
+              [ngClass]="['btn btn-md', modalAction === 'create' ? 'btn-success' : 'btn-primary']"
+              (click)="onConsumerMeterSubmit()">
+        <span class="font-weigh-bold">{{ modalAction === 'create' ? 'Add' : 'Save' }}</span>
+      </button>
+    </div>
+  </ng-template>
+
+  <ng-template #uploadFilesModal>
+    <file-upload [resourceModel]="'consumer'"
+                 [resourceId]="model.id"
+                 (uploadSuccess)="uploadSuccess($event)">
+    </file-upload>
+  </ng-template>
+
+  <ng-template #previewDocument>
+    <file-preview id="documentView" [attachmentPath]="documentToPreview.fullFilePath" [attachmentId]="documentToPreview.id"
+                  (changeImage)="scrollIntoView('documentView')" (closePreview)="modal.hide()"></file-preview>
+  </ng-template>
+
+  <ng-template #deactivateConfirmModal>
+    <div class="modal-header">
+      <h4 class="modal-title text-center">
+        Deactivate consumer
+      </h4>
+    </div>
+    <div class="modal-body">
+      <form action="" method="post" class="form-horizontal" #modalDeactivateForm="ngForm">
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label" for="customer-name">Customer Name</label>
+          <div class="col-md-9">
+            <input id="customer-name" name="customer-name" [value]="model.customer?.name" class="form-control" disabled />
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label" for="mssl-no">MSSL No</label>
+          <div class="col-md-9">
+            <input id="mssl-no" name="mssl-no" [value]="model.msslNo" class="form-control" disabled />
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label" for="effective-date">
+            Effective Date
+          </label>
+          <div class="col-md-9">
+            <input id="effective-date" name="effective-date" class="form-control" placeholder="Effective Date"
+                   bsDatepicker required
+                   [bsConfig]="adminConfig?.bootstrap.datePicker"
+                   [(ngModel)]="model.effectiveDate.short" #effectiveDateField="ngModel">
+
+            <div *ngIf="effectiveDateField.touched && effectiveDateField.invalid" class="invalid-feedback">
+              <div *ngIf="effectiveDateField?.errors.required">
+                Effective Date is required.
+              </div>
+              <div *ngIf="effectiveDateField?.errors.invalidDate">
+                Effective Date is invalid.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label required" for="rejected-reason">Reason</label>
+          <div class="col-md-9">
+            <select id="rejected-reason" name="rejected-reason" class="form-control"
+                      [class.is-invalid]="reasonField.touched && reasonField.invalid"
+                      required
+                      [(ngModel)]="model.reason" #reasonField="ngModel">
+              <option value="" disabled>Please select a deactivate reason</option>
+              <option *ngFor="let reason of consumerDeactivateReasons" [value]="reason">{{ reason }}</option>
+            </select>
+            <div *ngIf="reasonField.touched && reasonField.invalid" class="invalid-feedback">
+              <div *ngIf="reasonField?.errors.required">
+                Reason is required.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="model.reason" class="form-group row">
+          <label class="col-md-3 form-control-label" for="competitor">Competitor</label>
+          <div class="col-md-9">
+            <select id="competitor" name="competitor" class="form-control"
+                    [ngModel]="selectedRetailer?.id" (change)="selectById($event.target.value, 'selectedRetailer', 'retailerList')" #competitor="ngModel">
+              <option value="null" disabled>Please select a competitor</option>
+              <option *ngFor="let retailer of retailerList" [value]="retailer.id">{{ retailer.name }}</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary mr-auto" (click)="modal.hide()">Cancel</button>
+      <button type="button" class="btn btn-danger"
+              (click)="modal.hide(); modal.open(deactivateNotifyModal)"
+              [disabled]="!modalDeactivateForm.form.valid">
+        Confirm
+      </button>
+    </div>
+  </ng-template>
+
+  <ng-template #deactivateNotifyModal>
+    <div class="modal-header d-none">
+      <h4 class="modal-title text-center">
+        Confirmation
+      </h4>
+    </div>
+    <div class="modal-body">
+      <p>Before to confirm the termination/deactivation, kindly note the following:</p>
+      <ul>
+        <li>This request should only come from EBT,</li>
+        <li>This action will also terminate customer's contract with Starhub,</li>
+        <li>Therefore, a termination request will be sent to Starhub,</li>
+      </ul>
+      <p>Do you still want to continue?</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary mr-auto" (click)="modal.hide()">Cancel</button>
+      <button type="button" class="btn btn-danger" (click)="onDeactivateConfirm()">Yes</button>
+    </div>
+  </ng-template>
+</div>
+
+<div class="card-body p-0">
+  <admin-table-history *ngIf="model?.id" [id]="model.id" [modelOfHistories]="'consumer'"></admin-table-history>
+</div>

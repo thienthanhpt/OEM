@@ -1,0 +1,32 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+
+    <!-- Data table -->
+    <data-table id="table"
+                [items]="items" [itemCount]="meta.count"
+                [page]="meta.page" [limit]="20"
+                [sortBy]="'createdTime'" [sortAsc]="false"
+                [indexColumnHeader]="'#'" [substituteRows]="false"
+                (reload)="reloadItems($event)">
+      <data-table-column [property]="'name'" header="CDR Name"></data-table-column>
+      <data-table-column [property]="'billingCycle'" header="Billing Cycle"></data-table-column>
+      <data-table-column [property]="'numberOfRecord'" header="Number of Records"></data-table-column>
+      <data-table-column [property]="'createdTime.short'" header="Created Time"></data-table-column>
+      <data-table-column header="Actions">
+        <ng-template #dataTableHeader let-item="item">
+          <i>Actions</i>
+        </ng-template>
+        <ng-template #dataTableCell let-item="item">
+          <a class="btn btn-primary btn-sm" *ngIf="item.cdrDocument" [href]="item.cdrDocument?.fullFilePath" download>
+            <i class="fas fa-download" title="Download"></i>
+          </a>
+        </ng-template>
+      </data-table-column>
+    </data-table>
+  </div>
+</div>

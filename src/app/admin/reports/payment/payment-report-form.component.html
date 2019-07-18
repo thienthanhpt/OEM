@@ -1,0 +1,65 @@
+<div class="card">
+
+  <div class="card-header">
+    <div class="float-right">
+      <a class="btn btn-md btn-secondary" [routerLink]="linkToList()"><i class="fa fa-chevron-circle-left"></i> Return to List</a>
+      <button type="submit"
+              [ngClass]="['btn btn-md', 'btn-success']"
+              (click)="modelForm.ngSubmit.emit()"
+              [disabled]="!modelForm.form.valid || isLoading">
+        <i class="fa fa-check-circle"></i> Generate
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+    <form action="" method="post" enctype="multipart/form-data" class="form-horizontal admin-crud-form" (ngSubmit)="onSubmit()" #modelForm="ngForm">
+      <div class="form-group row">
+        <label class="col-md-2 form-control-label" for="fromDate">Date From</label>
+        <div class="col-md-4">
+          <input id="fromDate" name="fromDate" class="form-control" placeholder="Date From"
+                 [class.is-invalid]="fromDate.touched && fromDate.invalid"
+                 bsDatepicker
+                 [maxDate]="model.toDate.moment?.toDate()"
+                 [bsConfig]="adminConfig?.bootstrap.datePicker"
+                 [(ngModel)]="model.fromDate.short" #fromDate="ngModel">
+        </div>
+
+        <label class="col-md-2 form-control-label" for="toDate">Date To</label>
+        <div class="col-md-4">
+          <input id="toDate" name="toDate" class="form-control" placeholder="Date To"
+                 [class.is-invalid]="toDate.touched && toDate.invalid"
+                 bsDatepicker
+                 [maxDate]="now.moment?.toDate()"
+                 [minDate]="model.fromDate.moment?.toDate()"
+                 [bsConfig]="adminConfig?.bootstrap.datePicker"
+                 [(ngModel)]="model.toDate.short" #toDate="ngModel">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-md-2 form-control-label">Get All</label>
+        <div class="col-md-4">
+          <div class="toggle-wrapper">
+            <input type="checkbox" id="getAll" name="getAll"
+                   [(ngModel)]="model.getAll" />
+            <label for="getAll" class="toggle"><span class="toggle-handler"></span></label>
+          </div>
+        </div>
+
+        <label class="col-md-2 form-control-label font-weight-bold">Payment Origin</label>
+        <div class="col-md-4">
+
+          <ng-multiselect-dropdown name="payment-origin"
+                                   [placeholder]="'Select Payment Origin'"
+                                   [settings]="dropdownSettings"
+                                   [(ngModel)]="model.paymentOrigins"
+                                   [data]="paymentOriginList"
+                                   #selectOrigin>
+          </ng-multiselect-dropdown>
+
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+

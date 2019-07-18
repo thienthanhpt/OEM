@@ -1,0 +1,78 @@
+<div class="card">
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i>
+    <div class="float-right">
+    </div>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+    <h5 class="border-bottom mb-4 pb-1">
+      Residential – Starhub Partnership
+    </h5>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="row">
+          <div class="col-12">
+            <div style="position: relative; width: 100%; height: 30vh; min-height: 300px;">
+              <canvas id="chartBar">{{ chartBar }}</canvas>
+            </div>
+          </div>
+        </div>
+        <div class="row pt-2">
+          <div class="col-12">
+            <table class="table table-bordered table-responsive table-sm" style="display: table;">
+              <thead>
+                <tr>
+                  <th *ngFor="let item of tableMonth" [colSpan]="item.countColumn" class="text-center" width="{{ 100 / tableMonth.length }}%">
+                    {{ item.month.moment.format('MMM') }}
+                  </th>
+                </tr>
+                <tr>
+                  <th *ngFor="let expectedConsumer of tableExpectedConsumer" class="text-center">
+                    {{ expectedConsumer.name }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-center" *ngFor="let expectedConsumer of tableExpectedConsumer">
+                    {{ expectedConsumer.effectiveAmount || 0 }}/{{ expectedConsumer.expectedAmount || 0 }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="row">
+          <div class="col-12">
+            <div style="position: relative; width: 100%; height: 30vh; min-height: 300px;">
+              <canvas id="chartPie">{{ chartPie }}</canvas>
+            </div>
+          </div>
+        </div>
+        <div class="row pt-2">
+          <div class="col-12">
+            <table class="table table-bordered table-responsive table-sm">
+              <thead>
+              <tr>
+                <th align="center" *ngFor="let bill of model.billIssuedList">
+                  {{ bill.name }} bill
+                </th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td align="center" *ngFor="let bill of model.billIssuedList">
+                  {{ bill.value || 0 }}
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

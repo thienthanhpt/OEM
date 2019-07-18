@@ -1,0 +1,339 @@
+<div class="row overflow-hidden" id="invoiceStatisticContainer" (window:resize)="onResize($event)" >
+
+  <div class="col-4 p-0" *ngIf="isInvoiceStatisticsBeingView && (!invoiceToReview)">
+
+    <div class="border-top-light-blue mb-3 p-3 position-relative invoice-statistics cursor-pointer" *ngFor="let item of invoiceStatistics;" style="z-index: 100"
+         [ngClass]="{ 'bg-inverse': invoiceStatisticToReview === item }"
+         (click)="onInvoiceStatisticChange(item); scrollIntoView('invoiceStatisticContainer')">
+      <div class="row">
+        <div class="col-12">
+          <h4 class="font-weight-bold">BP {{ item.invoiceDate.dayMonth }}</h4>
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col-8 font-weight-bold">Expected dispatch date:</div>
+        <div class="col-4">{{ item.invoiceDate.short }}</div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-8 font-weight-bold">Due date:</div>
+        <div class="col-4">{{ item.dueDate.short }}</div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col-8 font-weight-bold">Number of customers:</div>
+        <div class="col-4">{{ item.customerCount }} / {{item.customerTotalCount}}</div>
+      </div>
+
+      <div class="row">
+        <div class="col-8 font-weight-bold">Number of invoices:</div>
+        <div class="col-4">{{ item.invoiceCount }} / {{item.invoiceTotalCount}}</div>
+      </div>
+
+      <div class="row">
+        <div class="col-8 font-weight-bold">Total billing amount</div>
+        <div class="col-4">{{ item.billingTotalAmountDisplay }}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="blockList" *ngIf="invoiceStatistics" [ngClass]="{'col-12' : !(isInvoiceStatisticsBeingView || invoiceToReview), 'col-lg-8' : (isInvoiceStatisticsBeingView || invoiceToReview)}">
+    <div class="card border-top-light-blue rounded">
+
+      <div class="card-body block-loading pt-2" [class.is-loading]="isLoading">
+        <div class="row">
+          <div class="col-6">
+            <div class="d-flex">
+              <button class="btn btn-close mr-4" *ngIf="invoiceToReview" (click)="invoiceToReview = null"><i class="fas fa-chevron-left"></i></button>
+              <h3 class="font-weight-bold">BP {{ invoiceStatisticToReview?.invoiceDate?.dayMonth }}</h3>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="d-flex justify-content-end align-content-center mb-2">
+              <button type="button" class="btn btn-outline-dark btn-question"
+                      placement="bottom"
+                      [tooltip]="popTemplate">
+                ?
+              </button>
+              <button class="btn btn-primary m-1" (click)="initConfirmActionOnMultipleInvoice(InvoiceAction.SendDispatch)">Force immediate dispatch</button>
+              <button class="btn btn-outline-danger m-1"
+                      (click)="initConfirmActionOnMultipleInvoice(InvoiceAction.UpdateStatus, InvoiceStatus.Cancelled)">
+                Reject
+              </button>
+              <button class="btn btn-success text-white m-1"
+                      (click)="initConfirmActionOnMultipleInvoice(InvoiceAction.UpdateStatus, InvoiceStatus.Approved)">
+                Approve
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <data-table id="table"
+                    [items]="items"
+                    [itemCount]="meta.count"
+                    [pageDisplay]="meta.page"
+                    [limit]="20"
+                    [indexColumnHeader]="'#'"
+                    [substituteRows]="false"
+                    [header]="true"
+                    [multiSelect]="true"
+                    [selectColumn]="true"
+                    [sortAsc]="false"
+                    [sortBy]="'dueDate'"
+                    [selectOnCheckboxClick]="false"
+                    (rowClick)="setInvoiceReview($event.row.item);"
+                    (reload)="reloadItems($event)">
+          <data-table-column property="no" header="Invoice No." [sortable]="true"></data-table-column>
+          <data-table-column sortProperty="usageFromDate" header="Usage Period" [sortable]="true">
+            <ng-template #dataTableCell let-item="item">
+              {{ item.usageFromDate.short }} - {{ item.usageToDate.short }}
+            </ng-template>
+          </data-table-column>
+          <data-table-column sortProperty="usageAmount" header="Usage Amount (KWh)" [sortable]="true">
+            <ng-template #dataTableCell let-item="item">
+              {{ item.usageAmount || 0 | number: adminConfig.number4Pipe }}
+            </ng-template>
+          </data-table-column>
+          <data-table-column sortProperty="signUpRate" property="signUpRate" header="Rate ($/KWh)" [sortable]="true">
+            <ng-template #dataTableCell let-item="item">
+              {{ item.signUpRate || 0 | number: adminConfig.number4Pipe }}
+            </ng-template>
+          </data-table-column>
+          <data-table-column sortProperty="totalAmount" header="Chargeable Amount ($)" [sortable]="true">
+            <ng-template #dataTableCell let-item="item">
+              {{ item.currentCharge || 0 | number: adminConfig.number4Pipe }}
+            </ng-template>
+          </data-table-column>
+          <data-table-column sortProperty="newBalance" header="Due Amount ($)" [sortable]="true" [visible]="false">
+            <ng-template #dataTableCell let-item="item">
+              {{ item.newBalance || 0 | number: adminConfig.number4Pipe }}
+            </ng-template>
+          </data-table-column>
+          <data-table-column property="dueDate.short" header="Due Date" [sortable]="true"></data-table-column>
+          <data-table-column property="invoiceStatusDisplay" sortProperty="status" header="Status"></data-table-column>
+          <data-table-column property="origin" sortProperty="origin" header="Invoice Origin"></data-table-column>
+          <data-table-column [selectable]="false" width="50px">
+            <ng-template #dataTableCell let-item="item">
+              <span class="cursor-pointer" [ngClass]="{'text-secondary': invoiceToReview?.id !== item?.id}">
+                <i class="fas fa-angle-right" style="font-size: 2rem;"></i>
+              </span>
+            </ng-template>
+          </data-table-column>
+        </data-table>
+
+        <ng-template #confirmMultipleActionModal>
+          <div class="modal-body" *ngIf="invoiceListToAction.length > 0">
+            <table class="table table-striped">
+              <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Invoice No</th>
+                <th scope="col">Usage Period</th>
+                <th scope="col">Chargeable Amount ($)</th>
+                <th scope="col">Due Amount ($)</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let invoice of invoiceListToAction; let i = index">
+                <th scope="row">{{ i + 1 }}</th>
+                <td>{{ invoice.no }}</td>
+                <td>{{ invoice.invoiceDate.short }} - {{ invoice.dueDate.short }}</td>
+                <td>{{ invoice.oldBalance }}</td>
+                <td>{{ invoice.totalAmount }}</td>
+
+                <td>
+                  <a href="javascript:void(0)" class="text-danger" (click)="removeInvoiceFromList(invoice)"><i class="fas fa-trash-alt"></i></a>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+            <div class="modal-actions d-flex justify-content-between">
+              <button type="button" class="btn" (click)="modal.hide()">Back</button>
+
+              <button class="btn btn-primary" *ngIf="action === InvoiceAction.SendDispatch" (click)="actionOnInvoice(InvoiceAction.SendDispatch, true)">
+                <span class="font-weight-bold">Force immediate dispatch</span>
+              </button>
+              <button class="btn btn-outline-danger float-right"
+                      *ngIf="action === InvoiceAction.UpdateStatus && invoiceListToAction[0].status == InvoiceStatus.Cancelled"
+                      (click)="actionOnInvoice(InvoiceAction.UpdateStatus, true)">
+                <span class="font-weigh-bold">Reject</span>
+              </button>
+              <button class="btn btn-success text-white"
+                      *ngIf="action === InvoiceAction.UpdateStatus && invoiceListToAction[0].status == InvoiceStatus.Approved"
+                      (click)="actionOnInvoice(InvoiceAction.UpdateStatus, true)">
+                <span class="font-weigh-bold">Approve</span>
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <div id="blockDetail" class="col-lg-4 order-detail p-0 block-detail div-scroll" #blockDetail *ngIf="invoiceToReview">
+    <div class="card border-top-light-blue rounded">
+      <div class="card-body py-3 px-0" style="font-size: 13px">
+        <div class="d-flex justify-content-between align-items-center px-3">
+          <button class="btn btn-close" (click)="invoiceToReview = null"><i class="fas fa-chevron-left"></i></button>
+          <div class="invoice-actions">
+            <button class="btn btn-outline-dark m-1" [loadingDisable]="isInvoiceGenerating" [displaySpinner]="true"
+                    (click)="forceGenerate(invoiceToReview.id)" *ngIf="!isInvoiceHasDocument">
+              Generate PDF
+            </button>
+            <button class="btn btn-outline-dark m-1" [loadingDisable]="isInvoiceGenerating" [displaySpinner]="true"
+                    (click)="forceGenerate(invoiceToReview.id)" *ngIf="isInvoiceHasDocument">
+              Re-generate PDF
+            </button>
+            <ng-container *ngIf="invoiceToReview.status === InvoiceStatus.Pending">
+              <button class="btn btn-outline-danger m-1" (click)="modal.open(confirmUpdateStatusModal, 'lg'); initConfirmActionOnInvoice(invoiceToReview, InvoiceAction.UpdateStatus, InvoiceStatus.Cancelled);">Reject</button>
+              <button class="btn btn-success text-white m-1" (click)="modal.open(confirmUpdateStatusModal, 'lg'); initConfirmActionOnInvoice(invoiceToReview, InvoiceAction.UpdateStatus, InvoiceStatus.Approved);">Approve</button>
+            </ng-container>
+          </div>
+        </div>
+        <div class="i-scroll px-3">
+          <div class="row mt-2">
+            <div class="col-6">
+              <div>
+                <strong>Name: </strong>{{ invoiceToReview.consumer?.customer?.name }}
+              </div>
+              <div>
+                <strong>Address: </strong>{{ invoiceToReview.consumer?.premiseAddress }}
+              </div>
+            </div>
+            <div class="col-6 text-right">
+              <div>
+                <strong>Due Date: </strong>{{ invoiceToReview.dueDate.dayMonthYear }}
+              </div>
+              <div>
+                <strong>Invoice Date: </strong>{{ invoiceToReview.invoiceDate.dayMonthYear }}
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="mt-3">
+                <strong>Billing period:</strong> ({{ invoiceToReview.invoiceFromDate.dayMonthYear }} - {{ invoiceToReview.invoiceToDate.dayMonthYear }})
+              </div>
+              <div>
+                <strong>Contract end date:</strong>
+                {{ invoiceToReview.contract?.actualEndDate.dayMonthYear || invoiceToReview.contract?.plannedEndDate.dayMonthYear }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-12">
+              <div class="row">
+                <div class="col-6"><b><u>Summary</u></b></div>
+                <div class="col-6 text-right"><b>Amount (S$)</b></div>
+              </div>
+              <div class="row">
+                <div class="col-6"><b>Balance from previous Bill</b></div>
+                <div class="col-6 text-right">{{ invoiceToReview.balanceFormPreviousBill || 0 | number: adminConfig.numberPipe }}</div>
+              </div>
+              <div class="row">
+                <div class="col-6"><b>Payment Received</b></div>
+                <div class="col-6 text-right">{{ invoiceToReview.paymentReceived || 0 | number: adminConfig.numberPipe }}</div>
+              </div>
+              <div class="row">
+                <div class="col-6"><b>Outstanding balance</b></div>
+                <div class="col-6 text-right">{{ invoiceToReview.oldBalance || 0 | number: adminConfig.numberPipe }}</div>
+              </div>
+              <div class="row">
+                <div class="col-6"><b>Current Charges</b></div>
+                <div class="col-6 text-right">{{ invoiceToReview.currentCharge || 0 | number: adminConfig.numberPipe }}</div>
+              </div>
+              <div class="row">
+                <div class="col-6"><b>Total Amount Payable</b></div>
+                <div class="col-6 text-right">{{ invoiceToReview.newBalance || 0 | number: adminConfig.numberPipe }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-12">
+              <div class="row">
+                <div class="col-6"><b><u>Breakdown of Charges</u></b></div>
+                <div class="col-6 text-right"><b>Plan</b> {{ invoiceToReview.pricingPlanName  }}</div>
+              </div>
+              <div *ngFor="let item of invoiceToReview.breakDownOfCharges">
+                <div class="row">
+                  <div class="col-7 pr-0"><b>Billing Period</b> <span style="font-size: 12px"></span>{{ item.billingPeriod }}</div>
+                <div class="col-5 text-right pl-0"><b>Usage (kWh)</b> {{ item.usageKWH || 0 | number: adminConfig.number4Pipe }}</div>
+                </div>
+                <div class="row">
+                <div class="col-6"><b>Rate</b> {{ item.rate || 0 | number: adminConfig.number4Pipe }}</div>
+                <div class="col-6 text-right"><b>Amount (S$)</b> {{ item.taxAbleAmount || 0 | number: adminConfig.number4Pipe }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-12">
+              <p><b><u>Attachment</u></b></p>
+            </div>
+            <div class="col-12">
+              <div class="row">
+                <div class="col-6" *ngIf="invoiceToReview.invoiceDocument">
+                  <p>{{ invoiceToReview.invoiceDocument?.displayName }}</p>
+                  <div class="attachment-preview">
+                    <img [src]="invoiceToReview.invoiceDocument?.fullFilePath" alt="attachment" class="img-fluid"
+                         onerror="this.src='../../../assets/images/file.png'">
+                    <div class="image-overlay">
+                      <a href="javascript:void(0)" class="btn btn-primary mr-2"
+                         *ngIf="isPreviewDocumentSupport(invoiceToReview.invoiceDocument)" (click)="modal.open(previewDocument, 'lg', { }, { ignoreBackdropClick: true });">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                      <a [href]="invoiceToReview.invoiceDocument.fullFilePath" class="btn btn-primary" download>
+                        <i class="fas fa-download"></i>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!invoiceToReview.invoiceDocument" class="col-12">
+              <span class="h5">No Preview</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #confirmUpdateStatusModal>
+      <div class="modal-body">
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label" for="invoiceNo">Invoice No.</label>
+          <div class="col-md-9">
+            <input id="invoiceNo" name="invoiceNo" [value]="invoiceToAction.no" class="form-control" disabled />
+          </div>
+        </div>
+
+        <hr>
+        <div class="modal-actions d-flex justify-content-between">
+          <button type="button" class="btn" (click)="modal.hide()">Back</button>
+          <button type="button" class="btn btn-primary" *ngIf="action === InvoiceAction.SendDispatch"
+                  (click)="actionOnInvoice(InvoiceAction.SendDispatch, false)">Force immediate dispatch</button>
+          <button type="button" class="btn btn-outline-danger" *ngIf="action === InvoiceAction.UpdateStatus"
+                  [ngClass]="{
+                                  'btn-outline-danger': invoiceToAction.status === InvoiceStatus.Cancelled,
+                                  'btn-success': invoiceToAction.status === InvoiceStatus.Approved
+                       }"
+                  (click)="actionOnInvoice(InvoiceAction.UpdateStatus, false)">
+            {{ invoiceToAction.status === InvoiceStatus.Cancelled ? 'Reject' : 'Approve' }}
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+
+  <ng-template #previewDocument>
+    <file-preview id="documentView" [attachmentPath]="invoiceToReview.invoiceDocument?.fullFilePath" [attachmentId]="invoiceToReview.invoiceDocument?.id"
+                  (changeImage)="scrollIntoView('documentView')" (closePreview)="modal.hide()"></file-preview>
+  </ng-template>
+  <ng-template #popTemplate>Please note that the approved invoices will be dispatched by midnight on the date of the BP.<br/>
+    If you require to force the immediate dispatch, selected invoices will be sent within 15 minutes.</ng-template>
+</div>

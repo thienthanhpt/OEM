@@ -1,0 +1,285 @@
+<div class="card">
+  <div class="card-header">
+    <div class="float-right">
+      <a class="btn btn-md btn-secondary" [routerLink]="linkToList()"><i class="fa fa-chevron-circle-left"></i> Return to List</a>
+      <a class="btn btn-md btn-secondary" href="javascript:void(0)" *ngIf="hasBackHistory" (click)="goBack()"><i class="fa fa-chevron-circle-left"></i> Back</a>
+    </div>
+  </div>
+
+  <div class="block-loading" [class.is-loading]="isLoading">
+
+    <form action="" method="post" enctype="multipart/form-data" class="form-horizontal" #modelForm="ngForm">
+      <div class="card-body" style="background-color: #f0f3f5">
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Customer Name</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.customer?.name">
+          </div>
+
+          <label class="col-md-2 form-control-label">Starhub Billing No.</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.consumer?.shBillingAccount">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Account Number</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.customer?.spAccountNo">
+          </div>
+
+          <label class="col-md-2 form-control-label">Contract No.</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.contract?.id">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Premise Address</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.consumer?.premiseAddress">
+          </div>
+
+          <label class="col-md-2 form-control-label">Premise Postal Code</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.consumer?.premisePostalCode">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Mobile No.</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.customer?.mobilePhone">
+          </div>
+
+          <label class="col-md-2 form-control-label">Email Address</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.customer?.emailAddress">
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h5 class="border-bottom mb-4 pb-1">
+          Price Plan
+        </h5>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Pricing Name</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.pricingPlanName">
+          </div>
+
+          <label class="col-md-2 form-control-label">Contract Term</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.contract?.termNumber">
+          </div>
+
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Rate</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.rate | percentage">
+          </div>
+
+          <label class="col-md-2 form-control-label">Discount</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.discountPercentage | percentage">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Off Peak Rate</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.offPeakRate | percentage">
+          </div>
+
+          <label class="col-md-2 form-control-label">Clean Energy Percentage</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.cleanEnergyPercentage | percentage">
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h5 class="border-bottom mb-4 pb-1">
+          Billing Details
+        </h5>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Invoice Name</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.no">
+          </div>
+
+          <label class="col-md-2 form-control-label">Invoice Period</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.period">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Invoice Date</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.invoiceDate.short">
+          </div>
+
+          <label class="col-md-2 form-control-label">Invoice Due Date</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.dueDate.short">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Bill discount</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   value="">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">U-save</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   value="">
+
+          </div>
+
+          <label class="col-md-2 form-control-label">Rebate</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.rebate">
+
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Amount before GST</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.netAmount | number: adminConfig.numberPipe">
+          </div>
+
+          <label class="col-md-2 form-control-label">GST Amount</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.gstAmount | number: adminConfig.numberPipe">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Total Amount Payable</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.totalAmount | number: adminConfig.numberPipe">
+
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Peak Period Consumption</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.peakConsumption | percentage">
+
+          </div>
+
+          <label class="col-md-2 form-control-label">Off Peak</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.offPeakConsumption | percentage">
+
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Outstanding Balance Before Invoice</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.oldBalance | number: adminConfig.numberPipe">
+          </div>
+
+          <label class="col-md-2 form-control-label">New Outstanding Balance</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.newBalance | number: adminConfig.numberPipe">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Remarks</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.remarks">
+          </div>
+
+          <label class="col-md-2 form-control-label">Documents</label>
+          <div class="col-md-4">
+            <div>
+              <a [href]="model.invoiceDocument?.fullFilePath">{{ model.invoiceDocument?.displayName }}</a>
+            </div>
+            <div *ngIf="model.invoiceDocument == null">No document uploaded</div>
+            <button type="button" class="btn btn-md btn-success"
+                    (click)="modal.open(uploadFilesModal, 'lg')">
+              <i class="fa fa-upload"></i> Upload document
+            </button>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Creation Time</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.createdTime.short">
+
+          </div>
+
+          <label class="col-md-2 form-control-label">Last Update Time</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.updatedTime.short">
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <tabset>
+          <tab heading="Paid Charges" id="paid-charges-tab">
+            <admin-consumer-charge-table [items]="model.paidCharges" [hideAction]="true"></admin-consumer-charge-table>
+          </tab>
+
+          <tab heading="Documents">
+            <data-table id="documentsTable"
+                        [items]="model.documents"
+                        [substituteRows]="false" [pagination]="false"
+                        [isRefreshable]="true"
+                        [indexColumnHeader]="'#'" [minHeight]="true"
+                        (reload)="reloadDocuments()">
+              <data-table-column [property]="'displayName'" header="Title"></data-table-column>
+              <data-table-column header="Actions">
+                <ng-template #dataTableHeader let-item="item">
+                  <i>Actions</i>
+                </ng-template>
+                <ng-template #dataTableCell let-item="item">
+                  <div class="d-flex justify-content-center">
+                    <a *ngIf="item.filePath" class="btn btn-primary mr-2" [href]="item.fullFilePath">
+                      <i class="fas fa-download"></i>
+                    </a>
+                    <button *ngIf="isPreviewDocumentSupport(item)" type="button" class="btn btn-primary"
+                            (click)="documentToPreview = item; modal.open(previewDocument, 'lg');">
+                      <i class="far fa-file-alt"></i>
+                    </button>
+                  </div>
+                </ng-template>
+              </data-table-column>
+            </data-table>
+            <button type="button" class="btn btn-md btn-success" (click)="modal.open(uploadFilesModal, 'lg')">
+              <i class="fa fa-upload"></i> Upload Document
+            </button>
+          </tab>
+        </tabset>
+      </div>
+    </form>
+  </div>
+
+  <ng-template #uploadFilesModal>
+    <file-upload [resourceModel]="'invoice'" [resourceId]="model.id" (uploadSuccess)="uploadSuccess($event)"></file-upload>
+  </ng-template>
+
+  <ng-template #previewDocument>
+    <file-preview id="documentView" [attachmentPath]="documentToPreview.fullFilePath" [attachmentId]="documentToPreview.id"
+                  (changeImage)="scrollIntoView('documentView')" (closePreview)="modal.hide()"></file-preview>
+  </ng-template>
+</div>
+
+<div class="card-body p-0">
+  <admin-table-history *ngIf="model?.id" [id]="model.id" [modelOfHistories]="'invoice'"></admin-table-history>
+</div>

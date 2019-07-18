@@ -1,0 +1,113 @@
+<div class="d-flex justify-content-between align-items-start">
+  <div class="text-left">
+    <p class="font-weight-bold mb-0">DBS Marketplace</p>
+    <span *ngIf="type === ddaType.TO_BANK">Step 1 - pDDA</span>
+    <span *ngIf="type === ddaType.FROM_BANK">Step 2 - pDDA return</span>
+  </div>
+  <div class="text-right">
+    <button *ngIf="type === ddaType.TO_BANK" class="btn btn-success text-white" (click)="openGenerateFilesModal()">Generate</button>
+    <button *ngIf="type === ddaType.FROM_BANK" class="btn btn-success text-white" (click)="openUploadFilesModal()">Upload</button>
+  </div>
+</div>
+
+<data-table id="table"
+            [items]="items"
+            [itemCount]="meta['count']"
+            [pageDisplay]="meta['page']"
+            [limit]="7"
+            [indexColumn]="false"
+            [substituteRows]="false"
+            [header]="true"
+            [showReloading]="true"
+            (reload)="reloadItems($event)">
+  <data-table-column property="name" header="File Name" [sortable]="true" sortProperty="name">
+    <ng-template #dataTableCell let-item="item">
+      <div class="text-overflow-ellipsis" data-toggle="popover" [title]="item.name">{{ item.name }}</div>
+    </ng-template>
+  </data-table-column>
+  <data-table-column property="createdTime.short" header="Date" [sortable]="true"></data-table-column>
+  <data-table-column property="numberOfRecord" header="Number of records"
+                     [center]="true" [sortable]="true" [visible]="type === ddaType.TO_BANK"></data-table-column>
+  <data-table-column property="status" header="Status" [center]="true" *ngIf="type === ddaType.FROM_BANK">
+    <ng-template #dataTableCell let-item="item">
+      {{ item.status | uppercaseFirstLetter }}
+      <i class="fas fa-info-circle text-danger" data-toggle="popover" [title]="item.note"
+         style="cursor: pointer" (click)="alertModalService.error('Failure Reason', item.note)"
+         *ngIf="item.status === ddaFileStatus.FAILED"></i>
+      <i class="fas fa-info-circle text-info" data-toggle="popover" [title]="item.note"
+         style="cursor: pointer" (click)="selectedDdaFile = item; modal.open(pddaReturnStatusModal, 'lg')"
+         *ngIf="item.status === ddaFileStatus.SUCCESSFUL"></i>
+    </ng-template>
+  </data-table-column>
+  <data-table-column property="summarize" header="Record Summary" [center]="true" *ngIf="type === ddaType.FROM_BANK">
+    <ng-template #dataTableCell let-item="item">
+      <div [innerHTML]="item.summarize()"></div>
+    </ng-template>
+  </data-table-column>
+  <data-table-column property="download" header="Actions" [center]="true">
+    <ng-template #dataTableCell let-item="item">
+      <a *ngIf="item.document" [href]="item.document.fullFilePath" class="text-primary p-2" title="download" download>
+        <i class="fas fa-download"></i>
+      </a>
+      <a href="javascript:void(0)" class="text-danger p-2" title="delete" *ngIf="type === ddaType.TO_BANK"
+         (click)="fileToDelete = item; modal.open(confirmToDeleteFileModal, 'md');">
+        <i class="fas fa-trash-alt"></i>
+      </a>
+    </ng-template>
+  </data-table-column>
+</data-table>
+
+<ng-template #pddaReturnStatusModal>
+  <div class="text-right pt-2 pr-3">
+    <button type="button" class="close float-none" aria-label="Close" (click)="modal.hide()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body" *ngIf="selectedDdaFile">
+    <table class="table table-striped">
+      <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Order ID</th>
+        <th scope="col">Full Name</th>
+        <th scope="col">MSSL No</th>
+        <th scope="col">Status</th>
+        <th scope="col">Reason</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let record of selectedDdaFile.ddaRecords; let i = index">
+        <th scope="row">{{ i + 1 }}</th>
+        <td>{{ record.orderId }}</td>
+        <td>{{ record.customerName }}</td>
+        <td>{{ record.msslNo }}</td>
+        <td>{{ record.isSuccessful ? 'Approved' : 'Rejected' }}</td>
+        <td>{{ record.reasonMsg }}</td>
+      </tr>
+      </tbody>
+    </table>
+    <hr>
+    <button type="button" class="btn btn-md float-right" (click)="modal.hide()">Close</button>
+  </div>
+</ng-template>
+
+<ng-template #confirmToDeleteFileModal>
+  <div class="text-right pt-2 pr-3">
+    <button type="button" class="close float-none" aria-label="Close" (click)="modal.hide()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body text-center pt-0 pl-5 pr-5">
+    <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+    <h5 class="mt-4 mb-3 font-weight-bold">Confirmation</h5>
+    <p>Are you sure to delete this file {{ fileToDelete.name }}?</p>
+    <div class="text-center mb-2">
+      <button type="button" class="btn btn-md mr-auto" (click)="modal.hide()">No, Keep File</button>
+      <button type="button" class="btn btn-md btn-danger"
+              [loadingDisable]="isLoading" [displaySpinner]="true"
+              (click)="deleteGeneratedFile()">
+        <span class="font-weigh-bold">Yes, Delete File</span>
+      </button>
+    </div>
+  </div>
+</ng-template>

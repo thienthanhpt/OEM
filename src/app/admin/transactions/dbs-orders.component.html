@@ -1,0 +1,58 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+    <div class="float-right">
+      <button class="btn btn-md btn-success text-white" (click)="openUploadFilesModal()">
+        <i class="fas fa-plus"></i> Import
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+    <!-- Search form -->
+    <form class="form-horizontal" (ngSubmit)="reloadItems(getResetTableParameters())">
+      <div class="form-group row">
+        <div class="col-md-8">
+          <div class="input-group">
+            <input type="text" class="form-control" name="search" placeholder="File Name"
+                   [(ngModel)]="criteriaAllInOne">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <!-- Data table -->
+    <data-table id="table"
+                [items]="items" [itemCount]="meta.count"
+                [page]="meta.page" [limit]="20"
+                [indexColumnHeader]="'#'" [substituteRows]="false"
+                [sortBy]="'createdTime'" [sortAsc]="false"
+                (reload)="reloadItems($event)">
+      <data-table-column [property]="'fileName'" header="Name" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'createdTime.short'" header="Uploaded Date" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'user.fullName'" header="Uploaded By" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'statusDisplay'" header="Status" [sortProperty]="'status'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'reason'" header="Reason"></data-table-column>
+      <data-table-column header="Actions">
+        <ng-template #dataTableHeader let-item="item">
+          <i>Actions</i>
+        </ng-template>
+        <ng-template #dataTableCell let-item="item">
+          <a class="btn btn-primary btn-sm text-white" title="Verify"
+             *ngIf="item.status === usageDataStatus.Pending"
+             (click)="verifyFileUploadContent(item)">
+            <i class="fas fa-check"></i>
+          </a>
+          <a class="btn btn-primary btn-sm" [href]="item.document?.fullFilePath" download>
+            <i class="fas fa-download"></i>
+          </a>
+        </ng-template>
+      </data-table-column>
+    </data-table>
+  </div>
+</div>
+

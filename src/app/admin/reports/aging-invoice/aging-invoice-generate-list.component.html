@@ -1,0 +1,146 @@
+<div class="card">
+
+  <div class="card-header">
+    <a class="btn btn-md btn-secondary" [routerLink]="linkToList()"><i class="fa fa-chevron-circle-left"></i> Return to List</a>
+    <div class="float-right">
+      <a href="javascript:void(0)" class="btn btn-md"
+         [ngClass]="{'btn-success': selectedCustomers.length <= 0, 'btn-secondary text-muted': selectedCustomers.length > 0}"
+         (click)="selectedCustomers.length <= 0 && modal.open(generateAllConfirmationModal, 'md')">
+        Generate All ({{ dataTable.itemCount }})
+      </a>
+      <a href="javascript:void(0)" class="btn btn-md"
+         [ngClass]="{'btn-success': selectedCustomers.length > 0, 'btn-secondary text-muted': selectedCustomers.length <= 0}"
+         (click)="openSelectedCustomersModal()">
+        Generate ({{ selectedCustomers.length }})
+      </a>
+      <button class="btn btn-md btn-outline-dark" *ngIf="selectedCustomers.length > 0" (click)="resetAllSelectedRow()">
+        <i class="fas fa-redo-alt"></i> Reset
+      </button>
+    </div>
+
+    <ng-template #generateAllConfirmationModal>
+      <div class="pt-3 pr-4 pl-4">
+        <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center pl-5 pr-5 pb-5">
+        <i class="fas fa-info-circle fa-4x text-info"></i>
+        <h5 class="mt-4 mb-3 font-weight-bold">Generate report for all customers?</h5>
+        <div class="text-center">
+          <button type="button" class="btn btn-md" (click)="modal.hide()">Cancel</button>
+          <button type="button" class="btn btn-success text-white" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                  (click)="generateAll()">
+            Generate
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+
+    <form class="form-horizontal" (ngSubmit)="reloadItems(getResetTableParameters())">
+      <div class="form-group row">
+        <div class="col-md-8">
+          <div class="input-group">
+            <input type="text" class="form-control" name="search" placeholder="Sunseap Account / Customer Name / GST / UEN / Postal / Address / Customer Type"
+                   [(ngModel)]="criteriaAllInOne">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <data-table id="table"
+                [items]="items"
+                [itemCount]="meta.count"
+                [page]="meta.page"
+                [limit]="20"
+                [sortBy]="'updatedTime'" [sortAsc]="false"
+                [indexColumnHeader]="'#'"
+                [multiSelect]="true"
+                [selectColumn]="true"
+                [selectOnCheckboxClick]="false"
+                [substituteRows]="false"
+                (multipleSelectRow)="onRowSelected($event.item, $event.selected)"
+                (rowCreated)="onRowCreated($event)"
+                (reload)="reloadItems($event)">
+      <data-table-column [property]="'spAccountNo'" [header]="'Sunseap Account No'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'name'" [header]="'Customer Name'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'gstRegisteredNo'" [header]="'GST Registered No'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'identificationNo'" [header]="'UEN/ACRA'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'postalCode'" [header]="'Postal Code'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'address'" [header]="'Address'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'emailAddress'" [header]="'Email Address'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'countryDisplay'" [sortProperty]="'country'" [header]="'Country'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'typeDisplay'" [sortProperty]="'type'" [header]="'Customer Type'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'createdTime.short'" [header]="'Created Time'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'updatedTime.short'" [header]="'Last Updated Time'" [sortable]="true"></data-table-column>
+      <data-table-column header="Actions">
+        <ng-template #dataTableHeader let-item="item">
+          <i>Actions</i>
+        </ng-template>
+        <ng-template #dataTableCell let-item="item">
+          <a class="btn btn-primary btn-sm" [routerLink]="['../../../management/customers/' + item.id, 'detail']">
+            <i class="fas fa-eye"></i>
+          </a>
+        </ng-template>
+      </data-table-column>
+    </data-table>
+
+    <ng-template #selectedCustomerModal>
+      <div class="modal-body" *ngIf="selectedCustomers.length > 0">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Sunseap Account No</th>
+            <th scope="col">Customer Name</th>
+            <th scope="col">Postal Code</th>
+            <th scope="col">Address</th>
+            <th scope="col"></th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let customer of getDisplayCustomerOnPaging; let i = index">
+            <th scope="row">{{ (i + 1) + ((modalCurrentPage - 1) * modalLimit) }}</th>
+            <td>{{ customer.spAccountNo }}</td>
+            <td>{{ customer.name }}</td>
+            <td>{{ customer.postalCode }}</td>
+            <td>{{ customer.address }}</td>
+            <td>
+              <a href="javascript:void(0)" class="text-danger" (click)="!modalLoading && removeCustomerFromList(customer)">
+                <i class="fas fa-trash-alt"></i>
+              </a>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+          <ul class="pagination justify-content-end">
+            <li class="page-item" [class.disabled]="modalCurrentPage === 1">
+              <a class="page-link" href="javascript:void(0)" tabindex="-1" (click)="modalCurrentPage = modalCurrentPage - 1">Previous</a>
+            </li>
+            <ng-container *ngFor="let page of pageCount; let i = index">
+              <li class="page-item" [class.active]="modalCurrentPage === i + 1" >
+                <a class="page-link" href="javascript:void(0)" (click)="modalCurrentPage = i + 1">{{ i + 1 }}</a>
+              </li>
+            </ng-container>
+            <li class="page-item" [class.disabled]="modalCurrentPage === modalPage">
+              <a class="page-link" href="javascript:void(0)" (click)="modalCurrentPage = modalCurrentPage + 1">Next</a>
+            </li>
+          </ul>
+        </nav>
+        <hr>
+        <button type="button" class="btn btn-md float-left" (click)="modal.hide()">Back</button>
+        <button type="button" class="btn btn-primary float-right" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                (click)="generate()">
+          Generate
+        </button>
+      </div>
+    </ng-template>
+  </div>
+</div>

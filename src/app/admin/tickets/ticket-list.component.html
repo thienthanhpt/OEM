@@ -1,0 +1,63 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+    <div class="float-right">
+      <a class="btn btn-md btn-success" [routerLink]="'new'">
+        <i class="fas fa-plus"></i> Create
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+
+    <ul class="nav nav-tabs">
+      <li *ngFor="let status of ticketStatusCategories | values" class="nav-item"
+          [class.active]="activeTab == status.value"
+          (click)="onTabSelect(status.value)">
+        <a class="nav-link" href="javascript:void(0);" [class.active]="activeTab == status.value">
+          <span>{{ status.name }} ({{ status.count }})</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane active">
+        <!-- Data table -->
+        <data-table id="table"
+                    [items]="items" [itemCount]="meta.count"
+                    [page]="meta.page" [limit]="20"
+                    [sortBy]="'createdTime'" [sortAsc]="false"
+                    [indexColumnHeader]="'#'"
+                    [substituteRows]="false"
+                    (reload)="reloadItems($event)">
+          <data-table-column [property]="'name'" header="Name" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'reporter.name'" header="Reporter" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'assignee.fullName'" header="Assignee" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'customer.name'" header="Customer" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'supervisor.fullName'" header="Supervisor" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'assignedDate.short'" header="Assigned Date" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'expectedStartDate.short'" header="Expected Start Date" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'expectedEndDate.short'" header="Expected End Date" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'actualEndDate.short'" header="Actual End Date" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'contractNumber'" header="Referenced Contract" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'invoiceNumber'" header="Referenced Invoice" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'vote'" header="Vote" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'ticketStatusDisplay'" header="Status" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'createdTime.short'" header="Created Time" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'updatedTime.short'" header="Last Updated Time" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column header="Actions">
+            <ng-template #dataTableHeader let-item="item">
+              <i>Actions</i>
+            </ng-template>
+            <ng-template #dataTableCell let-item="item">
+              <a class="btn btn-primary btn-sm" [routerLink]="[item.id, 'detail']"><i class="fas fa-eye"></i></a>
+              <a class="btn btn-primary btn-sm" [routerLink]="[item.id, 'edit']"><i class="fas fa-edit"></i></a>
+            </ng-template>
+          </data-table-column>
+        </data-table>
+      </div>
+    </div>
+
+  </div>
+</div>

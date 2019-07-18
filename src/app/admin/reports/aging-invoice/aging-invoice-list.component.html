@@ -1,0 +1,37 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+    <div class="float-right">
+      <a class="btn btn-md btn-success" [routerLink]="'new'">
+        <i class="fas fa-plus"></i> Generate Aging Invoice Report
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+    <!-- Data table -->
+    <data-table id="table"
+                [items]="items"
+                [itemCount]="meta.count"
+                [page]="meta.page"
+                [limit]="20"
+                [sortBy]="'id'"
+                [sortAsc]="false"
+                [indexColumnHeader]="'#'"
+                [substituteRows]="false"
+                (reload)="reloadItems($event)">
+      <data-table-column [property]="'name'" header="Name" [sortable]="true"></data-table-column>
+      <data-table-column header="Actions" [width]="100">
+        <ng-template #dataTableHeader let-item="item">
+          <i>Actions</i>
+        </ng-template>
+        <ng-template #dataTableCell let-item="item">
+          <a *ngIf="item.filePath" class="btn btn-primary btn-sm" [href]="item.fullFilePath" download>
+            <i class="fas fa-download"></i>
+          </a>
+        </ng-template>
+      </data-table-column>
+    </data-table>
+  </div>
+</div>

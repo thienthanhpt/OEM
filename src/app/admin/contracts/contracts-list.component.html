@@ -1,0 +1,102 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+    <div class="float-right">
+      <a class="btn btn-md btn-success" [routerLink]="'new'">
+        <i class="fas fa-plus"></i> Create
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+    <!-- Search form -->
+    <form class="form-horizontal" (ngSubmit)="reloadItems(getResetTableParameters())">
+      <div class="form-group row">
+        <div class="col-md-8">
+          <div class="input-group">
+            <input type="text" class="form-control" name="search" placeholder="Ref / Customer Name/ Consumer Name / Address / Postal Code / MSSL No / Pricing Name"
+                   [(ngModel)]="criteriaAllInOne">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <!-- Data table -->
+    <data-table id="table"
+                [items]="items"
+                [itemCount]="meta.count"
+                [page]="meta.page"
+                [limit]="20"
+                [sortBy]="'createdTime'" [sortAsc]="false"
+                [indexColumnHeader]="'#'"
+                [substituteRows]="false"
+                (reload)="reloadItems($event)">
+      <data-table-column [property]="'contractRef'" [header]="'Ref'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'consumer.msslNo'" [header]="'MSSL No'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'consumer.name'" [header]="'Consumer Name'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'customer.name'" [header]="'Customer Name'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'consumer.premiseAddress'" [header]="'Premise Address'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'consumer.premisePostalCode'" [header]="'Premise Postal Code'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'pricingPlanName'" [header]="'Pricing Name'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'pricingMarker'" [header]="'Pricing Marker'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'signUpRate'" sortProperty="signUpRate" header="Rate / Discount (%)" [visible]="false" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.signUpRate | percentage: false }} / {{ item.discountPercentage | percentage: false }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'latePaymentRate'" [header]="'Late Payment Rate (%)'" [visible]="false" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.latePaymentRate | percentage:false }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'offPeakRate'" [header]="'Off Peak Rate (%)'" [visible]="false" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.offPeakRate | percentage: false }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'billingPeriod.frequency'" [header]="'Billing Period'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'paymentMode.paymentMode'" [header]="'Payment Mode'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'paymentTermNumber'" [header]="'Payment Term'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'termNumber'" [header]="'Contract Term'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'threeMonthAverageConsumption'" [header]="'Three Month Average Consumption'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'specialRequest'" [header]="'Special Request'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'loadProfile'" [header]="'Load Profile'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'isHardCopyRequested'" [header]="'Hard Copy Requested'" [visible]="false" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.isHardCopyRequested | booleans }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'isTlfIncluded'" [header]="'TLF Included'" [visible]="false" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.isTlfIncluded | booleans }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'billingAddress'" [header]="'Billing Address'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'billingPostalCode'" [header]="'Billing Postal Code'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'cleanEnergyPercentage'" [header]="'Clean Energy (%)'" [visible]="false" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.cleanEnergyPercentage | percentage: false }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'signedDate.short'" [header]="'Contract Signed Date'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'commissionedDate.short'" [header]="'Contract Commissioned Date'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'plannedEndDate.short'" [header]="'Contract Term End Date'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'actualEndDate.short'" [header]="'Contract Actual End Date'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'createdTime.short'" [header]="'Created Time'" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'updatedTime.short'" [header]="'Last Updated Time'" [sortable]="true"></data-table-column>
+      <data-table-column header="Actions">
+        <ng-template #dataTableHeader let-item="item">
+          <i>Actions</i>
+        </ng-template>
+        <ng-template #dataTableCell let-item="item">
+          <a class="btn btn-primary btn-sm" [routerLink]="[item.id, 'detail']"><i class="fas fa-eye"></i></a>
+          <a class="btn btn-primary btn-sm" [routerLink]="[item.id, 'edit']"><i class="fas fa-edit"></i></a>
+        </ng-template>
+      </data-table-column>
+    </data-table>
+  </div>
+</div>

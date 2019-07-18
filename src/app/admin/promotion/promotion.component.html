@@ -1,0 +1,332 @@
+<div class="promotion-campaign card">
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+    <div class="float-right">
+      <a class="btn btn-sm btn-success text-white"
+         (click)="createPromotionCampaign()">
+        <i class="fas fa-plus"></i> Create Campaign
+      </a>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="tab-content">
+      <div class="tab-pane active">
+        <!-- Data table -->
+        <data-table id="table-promotion-campaign"
+                    [items]="items"
+                    [itemCount]="meta.count"
+                    [page]="meta.page"
+                    [limit]="promotionCampaignPagination.limit"
+                    [sortAsc]="promotionCampaignPagination.sortAsc"
+                    [sortBy]="promotionCampaignPagination.sortBy"
+                    [indexColumnHeader]="'#'"
+                    [substituteRows]="false"
+                    (reload)="reloadItems($event)">
+          <data-table-column [property]="'name'" header="Campaign Name" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'customerTypeDisplay'" header="Customer Type" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'amount'" header="Amount" [sortable]="true">
+            <ng-template #dataTableCell let-item="item">
+              {{ item.amount ? item.amount : '-'}}
+            </ng-template>
+          </data-table-column>
+          <data-table-column [property]="'description'" header="Description" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'fromDate.short'" header="Date From" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'toDate.short'" header="Date To" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'createdTime.short'" header="Created Time" [sortable]="true"></data-table-column>
+          <data-table-column header="Actions">
+            <ng-template #dataTableHeader let-item="item">
+              <i>Actions</i>
+            </ng-template>
+            <ng-template #dataTableCell let-item="item">
+              <button class="btn btn-primary btn-sm"
+                      (click)="isReview = true; isEdit = false; isCreate = false; detailPromotionCampaign(item)">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-primary btn-sm"
+                      (click)="isEdit = true; isCreate = false; isReview = false; detailPromotionCampaign(item)">
+                <i class="fas fa-edit"></i>
+              </button>
+            </ng-template>
+          </data-table-column>
+        </data-table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #promotionCampaignModal>
+  <div class="modal-header">
+    <h5 class="modal-title" *ngIf="isEdit">Edit Promotion Campaign</h5>
+    <h5 class="modal-title" *ngIf="isCreate">Create Promotion Campaign</h5>
+    <h5 class="modal-title" *ngIf="isReview">Promotion Campaign</h5>
+    <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide();">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-body block-loading promotion-campaign" [class.is-loading]="isLoading">
+    <ng-container *ngIf="isReview">
+
+      <div class="row m-0 pt-2 justify-content-between">
+        <div class="col-md-10 p-0">
+          <admin-custom-field-input [currentValue]="promotionCampaign?.name"
+                                    fieldName="Campaign Name">
+          </admin-custom-field-input>
+        </div>
+      </div>
+
+      <div class="row m-0 pt-2 justify-content-between">
+
+        <div class="col-md-5 p-0">
+          <admin-custom-field-input [currentValue]="promotionCampaign?.customerTypeDisplay"
+                                    fieldName="Customer Type">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-5 p-0">
+          <admin-custom-field-input [currentValue]="promotionCampaign?.amount"
+                                    fieldName="Amount">
+          </admin-custom-field-input>
+        </div>
+      </div>
+
+      <div class="row m-0 pt-2 justify-content-between">
+        <div class="col-md-5 p-0">
+          <admin-custom-date-field-input  fieldName="Date From"
+                                          [modelFieldName]="'fromDate'"
+                                          [currentValue]="promotionCampaign?.fromDate?.short"
+                                          [isEnable]="false">
+          </admin-custom-date-field-input>
+        </div>
+        <div class="col-md-5 p-0">
+          <admin-custom-date-field-input  fieldName="Date To"
+                                          modelFieldName="toDate"
+                                          [currentValue]="promotionCampaign?.toDate?.short"
+                                          [isEnable]="false">
+          </admin-custom-date-field-input>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="isEdit || isCreate">
+      <form method="post" action="" enctype="multipart/form-data" class="form-horizontal admin-crud-form" #modelForm="ngForm">
+        <div class="form-group row">
+          <label for="promo-campaign-name" class="col-md-3 form-control-label required">Campaign Name</label>
+          <div class="col-md-9">
+            <input type="text" id="promo-campaign-name" class="form-control" name="campaignName"
+                   [class.is-invalid]="campaignName.touched && campaignName.invalid"
+                   required
+                   [(ngModel)]="promotionCampaign.name" #campaignName="ngModel">
+            <div class="invalid-feedback" *ngIf="campaignName?.touched && campaignName?.invalid">
+              <ng-container *ngIf="campaignName?.errors?.required">Campaign Name is required.</ng-container>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="promo-customer-type" class="col-md-3 form-control-label required">Customer Type</label>
+          <div class="col-md-9">
+            <select name="customerType" id="promo-customer-type" class="form-control"
+                    [class.is-invalid]="customerType.touched && customerType.invalid"
+                    [disabled]="isEdit" required
+                    [(ngModel)]="promotionCampaign.customerType" #customerType>
+              <option *ngFor="let option of customerTypesDropDown | toArray" [value]="option.key">{{ option.value }}</option>
+            </select>
+            <div class="invalid-feedback" *ngIf="customerType?.touched && customerType?.invalid">
+              <ng-container *ngIf="customerType?.errors?.required">Customer Type is required.</ng-container>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="promo-amount" class="col-md-3 form-control-label required">Amount</label>
+          <div class="col-md-9">
+            <input type="number" id="promo-amount" class="form-control" name="promoAmount"
+                   [class.is-invalid]="promoAmount.touched && promoAmount.invalid"
+                   required
+                   [(ngModel)]="promotionCampaign.amount" #promoAmount="ngModel">
+            <div class="invalid-feedback" *ngIf="promoAmount?.touched && promoAmount?.invalid">
+              <ng-container *ngIf="promoAmount?.errors?.required">Amount is required.</ng-container>
+              <ng-container *ngIf="promoAmount?.errors?.pattern">Amount should be from 0 to 1.</ng-container>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="date-from" class="col-md-3 form-control-label font-weight-bold">Date From</label>
+          <div class="col-md-9">
+            <input id="date-from" class="form-control" placeholder="Date From" name="fromDate"
+                   [(ngModel)]="promotionCampaign.fromDate.short"
+                   [bsConfig]="adminConfig?.bootstrap.datePicker"
+                   bsDatepicker #dateFrom="ngModel">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="date-to" class="col-md-3 form-control-label font-weight-bold">Date To</label>
+          <div class="col-md-9">
+            <input id="date-to" class="form-control" placeholder="Date To" name="toDate"
+                   [(ngModel)]="promotionCampaign.toDate.short"
+                   [minDate]="promotionCampaign.fromDate?.moment?.toDate()"
+                   [bsConfig]="adminConfig?.bootstrap.datePicker"
+                   bsDatepicker #dateTo="ngModel">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="description" class="col-md-3 form-control-label font-weight-bold">Description</label>
+          <div class="col-md-9">
+            <textarea type="area" class="form-control ml-0" id="description" name="description"
+                      [(ngModel)]="promotionCampaign.description"
+                      #description="ngModel"></textarea>
+          </div>
+        </div>
+      </form>
+    </ng-container>
+
+    <div class="table-content pt-4">
+      <div class="tab-pane active">
+        <!-- Data table -->
+        <div class="position-relative">
+          <div class="btn-table-top-right right-0">
+            <button type="button" class="btn btn-sm btn-success" *ngIf="!isReview"
+                    (click)="modal.open(importFilePromotionCode, 'md', null, { class: 'box-shadow margin-top-sm' })">
+              <i class="fa fa-upload"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-success" *ngIf="!isReview"
+                    (click)="addPromotionCodeDetail()">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+          <data-table id="table-promotion-code"
+                      [items]="promotionCodeToDisplayOnPage"
+                      [itemCount]="promotionCodeToDisplay.length"
+                      [page]="promotionCodeMeta.page"
+                      [limit]="promotionCodePagination.limit"
+                      [offset]="promotionCodePagination.offset"
+                      [sortAsc]="promotionCodePagination.sortAsc"
+                      [sortBy]="promotionCodePagination.sortBy"
+                      [autoReload]="false"
+                      (reload)="reloadPromotionCodes($event)"
+                      [isRefreshable]="false"
+                      [isColumnsSelectable]="false"
+                      [indexColumnHeader]="'#'"
+                      [substituteRows]="false">
+            <data-table-column [property]="'code'" header="Promotion Code"></data-table-column>
+            <data-table-column [property]="'limit'" header="Limit">
+              <ng-template #dataTableCell let-item="item">
+                {{ item.limit ? item.limit : 'Unlimited' }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'usedCount'" [header]="'Used Count'"></data-table-column>
+            <data-table-column [property]="'customerTypeDisplay'" header="Customer Type"></data-table-column>
+            <data-table-column [property]="'createdTime.short'" [header]="'Created Time'" [visible]="false"></data-table-column>
+            <data-table-column header="Actions" *ngIf="!isReview">
+              <ng-template #dataTableHeader let-item="item">
+                <i>Actions</i>
+              </ng-template>
+              <ng-template #dataTableCell let-item="item">
+                <button class="btn text-danger btn-sm" (click)="deletePromotionCode(item)"><i class="fas fa-trash"></i></button>
+              </ng-template>
+            </data-table-column>
+          </data-table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-default btn-md float-right"
+            (click)="closeModal()" *ngIf="isReview">Back</button>
+    <button class="btn btn-default btn-md mr-auto"
+            (click)="closeModal()" *ngIf="!isReview">Cancel</button>
+    <button class="btn btn-success btn-md" *ngIf="!isReview"
+            [disabled]="!promotionCampaign.name || !promotionCampaign.customerType || !promotionCampaign.amount || isLoadingButton"
+            [displaySpinner]="true" [loadingDisable]="isLoadingButton"
+            (click)="(isCreate) ? addPromotionCampaign() : updatePromotionCampaign()">Save</button>
+  </div>
+</ng-template>
+
+<ng-template #addPromotionCodeModal>
+  <div class="modal-header">
+    <h4 class="modal-title">Add Promotion Code</h4>
+    <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide();">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group row">
+      <label for="promotionCode" class="font-weight-bold form-control-label col-md-5">Promotion Code</label>
+      <div class="col-md-6">
+        <input type="text" id="promotionCode" class="form-control" [(ngModel)]="promotionCodeToCreate.code">
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label for="customer-type" class="font-weight-bold form-control-label col-md-5">Customer Type</label>
+      <div class="col-md-6">
+        <select name="customerType" id="customer-type" class="form-control"
+                [disabled]="promotionCampaign.customerType !== customerTypes.Any"
+                [(ngModel)]="promotionCodeToCreate.customerType">
+          <option *ngFor="let option of customerTypesDropDown | toArray" [value]="option.key">{{ option.value }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label for="limit" class="font-weight-bold form-control-label col-md-5">Limit</label>
+      <div class="col-md-6">
+        <input type="number" id="limit" class="form-control" [(ngModel)]="promotionCodeToCreate.limit">
+        <small class="text-muted font-italic">The field can be blank.</small>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <small *ngIf="notificationMessage && isAddedPromoCode" class="text-success font-italic">{{ notificationMessage }}</small>
+      <small *ngIf="notificationMessage && !isAddedPromoCode" class="text-danger font-italic">{{ notificationMessage }}</small>
+    </div>
+
+    <div class="modal-actions pt-4">
+      <button class="btn btn-md btn-success float-right"
+              [disabled]="!promotionCodeToCreate.code || !promotionCodeToCreate.customerType"
+              (click)="addPromotionCode()">Add</button>
+      <button class="btn btn-default btn-md float-left" (click)="modal.hide()">Back</button>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #importFilePromotionCode>
+  <file-upload [isUploadFile]="false" (reader)="reader($event)" (uploadSuccess)="uploadSuccess($event)"></file-upload>
+</ng-template>
+
+<ng-template #promotionImportedModal>
+  <div class="modal-body">
+    <data-table id="table-import"
+                [items]="promotionCodeListToInsert"
+                [itemCount]="promotionCodeListToInsert.length"
+                [page]="promotionCodeToInsertMeta.page"
+                [isRefreshable]="false"
+                [isColumnsSelectable]="false"
+                [substituteRows]="false"
+                [limit]="promotionCodeToInsertPagination.limit">
+      <data-table-column [property]="'code'" header="Promotion Code"></data-table-column>
+      <data-table-column [property]="'limit'" header="Limit">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.limit ? item.limit : 'Unlimited' }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'customerTypeDisplay'" header="Customer Type"></data-table-column>
+      <data-table-column header="Status">
+        <ng-template #dataTableCell let-item="item">
+          <i class="fas fa-exclamation-circle text-danger" *ngIf="item.status === promotionCodeStatus.Invalid" [title]="item.reason"></i>
+          {{ item.statusDisplay }}
+        </ng-template>
+      </data-table-column>
+    </data-table>
+
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-default mr-auto" (click)="modal.hide()">Back</button>
+    <button class="btn btn-primary float-right" [disabled]="!isExistsPromotionsCanBeImport" (click)="importPromotionCode()">Import</button>
+  </div>
+</ng-template>

@@ -1,0 +1,31 @@
+<data-table id="table"
+            [items]="items"
+            [itemCount]="meta['count']"
+            [pageDisplay]="meta['page']"
+            [limit]="10"
+            [header]="false"
+            [indexColumnHeader]="'#'"
+            [indexColumn]="true"
+            [substituteRows]="false"
+            [showReloading]="true"
+            (reload)="reloadItems($event)">
+  <data-table-column property="order.orderId" header="Order ID"></data-table-column>
+  <data-table-column property="order.customerName" header="Full Name"></data-table-column>
+  <data-table-column property="msslNo" header="MSSL No"></data-table-column>
+  <data-table-column property="postalCode" header="Postal Code"></data-table-column>
+  <data-table-column property="contractCommissionedDate.short" header="Commissioned Date"></data-table-column>
+  <data-table-column property="deletion" [selectable]="false" [width]="40">
+    <ng-template #dataTableCell let-item="item">
+      <a href="javascript:void(0)" class="text-danger" (click)="!loading && remove(item)"
+         *ngIf="this.contractRemovedIdList.indexOf(item.id) < 0"
+         data-toggle="popover" title="Click to ignore generating this file.">
+        <i class="fas fa-trash-alt"></i>
+      </a>
+      <a href="javascript:void(0)" class="text-primary" (click)="!loading && undo(item)"
+         *ngIf="this.contractRemovedIdList.indexOf(item.id) >= 0"
+         data-toggle="popover" title="Item removed, click to undo.">
+        <i class="fas fa-undo-alt"></i>
+      </a>
+    </ng-template>
+  </data-table-column>
+</data-table>

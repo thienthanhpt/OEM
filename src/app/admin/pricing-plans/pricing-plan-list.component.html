@@ -1,0 +1,60 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+    <div class="float-right" *ngIf="isAccessible(PageAccess.Create)">
+      <a class="btn btn-md btn-success" [routerLink]="'new'">
+        <i class="fas fa-plus"></i> Create
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+    <!-- Search form -->
+    <form class="form-horizontal" (ngSubmit)="reloadItems(getResetTableParameters())">
+      <div class="form-group row">
+        <div class="col-md-8">
+          <div class="input-group">
+            <input type="text" class="form-control" name="search" placeholder="Pricing Name / Validity / Company "
+                   [(ngModel)]="criteriaAllInOne">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <!-- Data table -->
+    <data-table id="table"
+                [items]="items"
+                [itemCount]="meta.count"
+                [page]="meta.page"
+                [limit]="20"
+                [sortBy]="'createdTime'" [sortAsc]="false"
+                [indexColumnHeader]="'#'"
+                [substituteRows]="false"
+                (reload)="reloadItems($event)">
+      <data-table-column [property]="'name'" [header]="'Pricing Name'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'subscription'" [header]="'Validity'"[sortable]="true"></data-table-column>
+      <data-table-column [property]="'companyName'" [header]="'Company'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'currentPricingPlanRate.statusDisplay'" [sortProperty]="'currentPricingPlanRate.status'" [header]="'Status'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'currentPricingPlanRate.rate'" header="Rate / Discount (%)" [sortable]="true">
+        <ng-template #dataTableCell let-item="item">
+          {{ item.rate | percentage: false }} / {{ item.discountPercentage | percentage: false }}
+        </ng-template>
+      </data-table-column>
+      <data-table-column [property]="'currentPricingPlanRate.cleanEnergyPercentage'" [header]="'Clean Energy (%)'" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'currentPricingPlanRate.startDate.short'" [header]="'Start date'" [sortable]="true"></data-table-column>
+      <data-table-column header="Actions" *ngIf="isAccessible(PageAccess.View) || isAccessible(PageAccess.Edit)">
+        <ng-template #dataTableHeader let-item="item">
+          <i>Actions</i>
+        </ng-template>
+        <ng-template #dataTableCell let-item="item">
+          <a class="btn btn-primary btn-sm" [routerLink]="[item.id, 'detail']" *ngIf="isAccessible(PageAccess.View)"><i class="fas fa-eye"></i></a>
+          <a class="btn btn-primary btn-sm" [routerLink]="[item.id, 'edit']" *ngIf="isAccessible(PageAccess.Edit)"><i class="fas fa-edit"></i></a>
+        </ng-template>
+      </data-table-column>
+    </data-table>
+  </div>
+</div>

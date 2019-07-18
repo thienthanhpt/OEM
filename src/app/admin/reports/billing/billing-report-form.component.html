@@ -1,0 +1,31 @@
+<div class="card">
+
+  <div class="card-header">
+    <div class="float-right">
+      <a class="btn btn-md btn-secondary" [routerLink]="linkToList()"><i class="fa fa-chevron-circle-left"></i> Return to List</a>
+      <button type="submit"
+              [ngClass]="['btn btn-md', 'btn-success']"
+              (click)="modelForm.ngSubmit.emit()"
+              [disabled]="!modelForm.form.valid || isLoading">
+        <i class="fa fa-check-circle"></i> Generate
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+    <form action="" method="post" enctype="multipart/form-data" class="form-horizontal admin-crud-form" (ngSubmit)="onSubmit()" #modelForm="ngForm">
+      <div class="form-group row">
+        <label class="col-md-2 form-control-label" for="billingOption">Billing Option</label>
+        <div class="col-md-4">
+          <select name="billingOption" id="billingOption" class="form-control"
+                  [class.is-invalid]="billingOption.touched && billingOption.invalid"
+                  [(ngModel)]="model.billingOption" #billingOption="ngModel">
+            <option [ngValue]="null">Please select a Billing Option</option>
+            <option *ngFor="let option of billingReportOptions | toArray" [ngValue]="option.key">{{ option.value }}</option>
+          </select>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+

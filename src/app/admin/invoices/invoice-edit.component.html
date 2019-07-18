@@ -1,0 +1,563 @@
+<div class="card">
+  <div class="card-header">
+    <div class="float-left">
+      <a class="btn btn-md btn-secondary" [routerLink]="linkToList()"><i class="fa fa-chevron-circle-left"></i> Return to List</a>
+      <a class="btn btn-md btn-secondary" href="javascript:void(0)" *ngIf="hasBackHistory" (click)="goBack()"><i class="fa fa-chevron-circle-left"></i> Back</a>
+    </div>
+    <div class="float-right">
+      <button type="button" class="btn btn-md btn-secondary" [routerLink]="linkToList()">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-md btn-primary" (click)="editInvoice(true)" [disabled]="modelForm.form.invalid">
+        <i class="fa fa-check-circle"></i> Save
+      </button>
+      <button type="button" class="btn btn-md btn-success" (click)="editInvoice(false)" [disabled]="modelForm.form.invalid">
+        <i class="fa fa-check-circle"></i> Save & Submit
+      </button>
+    </div>
+  </div>
+
+  <div class="block-loading" [class.is-loading]="isLoading">
+
+    <form action="" method="post" class="form-horizontal" #modelForm="ngForm">
+      <div class="card-body" style="background-color: #f0f3f5">
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Customer Name</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.customer?.name">
+
+          </div>
+
+          <label class="col-md-2 form-control-label">Consumer Name</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.consumer?.premiseAddress" >
+
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Account Number</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.customer?.spAccountNo" >
+          </div>
+
+          <label class="col-md-2 form-control-label">Contract Ref.</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="currentContract?.contractRef">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="contract-term" class="col-md-2">Contract Term</label>
+          <div class="col-md-4">
+            <input type="text" id="contract-term" class="form-control" disabled [value]="currentContract?.termNumber">
+          </div>
+
+          <label for="contract-commission-date" class="col-md-2">Contract Commission Date</label>
+          <div class="col-md-4">
+            <input type="text" id="contract-commission-date" class="form-control" disabled [value]="currentContract?.commissionedDate.short">
+
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Premise Address</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.consumer?.premiseAddress">
+          </div>
+
+          <label class="col-md-2 form-control-label">Premise Postal Code</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.consumer?.premisePostalCode">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Mobile No.</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.customer?.mobilePhone">
+          </div>
+
+          <label class="col-md-2 form-control-label">Email Address</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.customer?.emailAddress">
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <h5 class="border-bottom mb-4 pb-1">
+          Price Plan
+        </h5>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Pricing Name</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.pricingPlanName">
+          </div>
+
+          <label class="col-md-2 form-control-label">Rate</label>
+          <div class="col-md-4">
+            <div class="border-box">
+              <span *ngIf="currentContract?.contractTypeDisplay?.toLowerCase() === ContractType.Dot">
+                <ng-container *ngFor="let rate of currentPricingPlan?.promotionTemplate; let last = last">
+                  <ng-container>{{ (rate?.percentDiscount * 100).toFixed(2) }}</ng-container>
+                  <ng-container *ngIf="!last"> / </ng-container>
+                  <ng-container *ngIf="last"> % DOT </ng-container>
+                </ng-container>
+                <ng-container *ngFor="let promotion of currentPricingPlan?.promotionTemplate; let first = first; let last = last">
+                  <ng-container *ngIf="first && !last"> (first </ng-container>
+                  <ng-container *ngIf="!first"> / next </ng-container>
+                  <ng-container *ngIf="!(first && last)"> {{ promotion.defaultPeriodApplied }} mths</ng-container>
+                  <ng-container *ngIf="!first && last">)</ng-container>
+                </ng-container>
+              </span>
+
+              <span *ngIf="currentContract?.contractTypeDisplay?.toLowerCase() !== ContractType.Dot">
+                <ng-container *ngFor="let rate of currentPricingPlan?.promotionTemplate; let first = first; let last = last">
+                  <ng-container>
+                    <ng-container *ngIf="!first">, </ng-container>
+                    {{(rate?.rateExcludingTax * 100).toFixed(2)}}
+                  </ng-container>
+                  <ng-container *ngIf="!last"> / </ng-container>
+                  <ng-container *ngIf="last"> cents/kWh FIXED </ng-container>
+                </ng-container>
+                <ng-container *ngFor="let promotion of currentPricingPlan?.promotionTemplate; let first = first; let last = last">
+                  <ng-container *ngIf="first && !last"> (first </ng-container>
+                  <ng-container *ngIf="!first"> / next </ng-container>
+                  <ng-container *ngIf="!(first && last)"> {{ promotion.defaultPeriodApplied }} mths </ng-container>
+                  <ng-container *ngIf="!first && last">) - Excluding GST</ng-container>
+                  <ng-container *ngIf="first && last">- Excluding GST</ng-container>
+                </ng-container>
+              </span>
+            </div>
+          </div>
+
+        </div>
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Clean Energy (%)</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="model.cleanEnergyPercentage | percent">
+          </div>
+
+          <label class="col-md-2 form-control-label">Off Peak Rate</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="currentContract?.offPeakRate">
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h5 class="border-bottom mb-4 pb-1">
+          Billing Details
+        </h5>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label">Invoice Date</label>
+          <div class="col-md-4">
+            <input id="invoice-date" class="form-control" placeholder="Invoice Date"
+                   name="invoiceDate"
+                   [class.is-invalid]="invoiceDate.invalid && invoiceDate.touched"
+                   [(ngModel)]="dataInvoice?.invoiceDate.short"
+                   [bsConfig]="adminConfig?.bootstrap.datePicker"
+                   bsDatepicker #invoiceDate="ngModel" (ngModelChange)="onChangeInvoiceDate(dataInvoice.invoiceDate)">
+            <div *ngIf="invoiceDate.touched && invoiceDate.invalid" class="invalid-feedback">
+              <div *ngIf="invoiceDate?.errors.required">
+                Invoice date is required.
+              </div>
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label">Invoice Due Date</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value]="dataInvoice?.dueDate.short">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="invoice-date-from" class="col-md-2">Billing Period</label>
+          <div class="col-md-2">
+            <input id="invoice-date-from" class="form-control" placeholder="Invoice Date From"
+                   name="invoiceDateFrom" [value]="dataInvoice?.breakDownOfCharges[0].billingPeriod.split('-')[0]" disabled>
+<!--                   [class.is-invalid]="invoiceDateFrom.invalid && invoiceDateFrom.touched" required-->
+<!--                   [(ngModel)]="model.invoiceFromDate.short"-->
+<!--                   [bsConfig]="adminConfig?.bootstrap.datePicker"-->
+<!--                   bsDatepicker disabled #invoiceDateFrom="ngModel">-->
+<!--            <div *ngIf="invoiceDateFrom.touched && invoiceDateFrom.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="invoiceDateFrom?.errors.required">-->
+<!--                Billing Period is required.-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+          <div class="col-md-2">
+            <input id="invoice-date-to" class="form-control" placeholder="Invoice Date To"
+                   name="invoiceDateTo" [value]="dataInvoice?.breakDownOfCharges[0].billingPeriod.split('-')[1]" disabled>
+<!--                   [class.is-invalid]="invoiceDateTo.invalid && invoiceDateTo.touched" required-->
+<!--                   [(ngModel)]="model.invoiceToDate.short" [minDate]="model.invoiceFromDate?.moment?.toDate()"-->
+<!--                   [bsConfig]="adminConfig?.bootstrap.datePicker"-->
+<!--                   bsDatepicker disabled #invoiceDateTo="ngModel">-->
+<!--            <div *ngIf="invoiceDateTo.touched && invoiceDateTo.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="invoiceDateTo?.errors.required">-->
+<!--                Billing Period is required.-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+
+          <label for="usage-amount" class="col-md-2 form-control-label">Usage Amount (kWh)</label>
+          <div class="col-md-4">
+            <input type="number" id="usage-amount" class="form-control" placeholder="Usage Amount"
+                   disabled [value]="dataInvoice?.breakDownOfCharges[0].usageKWH">
+<!--                   name="usage-amount" required-->
+<!--                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"-->
+<!--                   [class.is-invalid]="usageAmount.invalid && usageAmount.touched"-->
+<!--                   [(ngModel)]="model.usageAmount" disabled #usageAmount="ngModel">-->
+<!--            <div *ngIf="usageAmount.touched && usageAmount.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="usageAmount?.errors.required">-->
+<!--                Amount is required.-->
+<!--              </div>-->
+<!--              <div *ngIf="usageAmount?.errors.pattern">-->
+<!--                Amount should be above 0 and 4 Decimal Places-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+        </div>
+
+        <div class="form-group row">
+
+          <label class="col-md-2 form-control-label">Amount before GST</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" [value]="dataInvoice?.breakDownOfCharges[0].taxAbleAmount" disabled>
+<!--                   name="netAmount" required placeholder="Amount before GST"-->
+<!--                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"-->
+<!--                   [class.is-invalid]="monthlyNetMonth.invalid && monthlyNetMonth.touched" disabled #monthlyNetMonth="ngModel">-->
+<!--            <div *ngIf="monthlyNetMonth.touched && monthlyNetMonth.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="monthlyNetMonth?.errors.required">-->
+<!--                Amount is required.-->
+<!--              </div>-->
+<!--              <div *ngIf="monthlyNetMonth?.errors.pattern">-->
+<!--                Amount should be above 0 and 4 Decimal Places-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+
+          <label class="col-md-2 form-control-label">GST Amount</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" [value] ="gstAmount"
+                   name="gstAmount" required placeholder="GST Amount" disabled>
+<!--                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces" -->
+<!--                   [class.is-invalid]="gstAmount.invalid && gstAmount.touched" #gstAmount="ngModel">-->
+<!--            <div *ngIf="gstAmount.touched && gstAmount.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="gstAmount?.errors.required">-->
+<!--                Amount is required.-->
+<!--              </div>-->
+<!--              <div *ngIf="gstAmount?.errors.pattern">-->
+<!--                Amount should be above 0 and 4 Decimal Places-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+
+        </div>
+
+        <div class="form-group row">
+
+          <label class="col-md-2 form-control-label">Rate</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" [value]="dataInvoice?.breakDownOfCharges[0].rate" disabled>
+<!--                   name="RateChargeEvent" required placeholder="Rate"-->
+<!--                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"-->
+<!--                   [class.is-invalid]="RateChargeEvent.invalid && RateChargeEvent.touched" disabled #RateChargeEvent="ngModel">-->
+<!--            <div *ngIf="RateChargeEvent.touched && RateChargeEvent.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="RateChargeEvent?.errors.required">-->
+<!--                Amount is required.-->
+<!--              </div>-->
+<!--              <div *ngIf="RateChargeEvent?.errors.pattern">-->
+<!--                Amount should be above 0 and 4 Decimal Places-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+
+          <label class="col-md-2 form-control-label">Chargeable Amount</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" [value] ="dataInvoice?.breakDownOfCharges[0].chargeableAmount"
+                   name="ChargeableAmount" disabled placeholder="Chargeable Amount">
+          </div>
+
+        </div>
+
+        <div class="form-group row">
+
+          <label class="col-md-2 form-control-label">Balance from previous Bill</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" [(ngModel)]="model.oldBalance"
+                   name="balanceFormPreviousBill" placeholder="Balance from previous Bill"
+                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"
+                   [class.is-invalid]="balanceFormPreviousBill.invalid && balanceFormPreviousBill.touched" #balanceFormPreviousBill="ngModel">
+            <div *ngIf="balanceFormPreviousBill.touched && balanceFormPreviousBill.invalid" class="invalid-feedback">
+              <div *ngIf="balanceFormPreviousBill?.errors.pattern">
+                Amount should be above 0 and 4 Decimal Places
+              </div>
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label">Payment Received</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" [(ngModel)]="model.paymentReceived"
+                   name="paymentReceived" placeholder="Payment Received"
+                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"
+                   [class.is-invalid]="paymentReceived.invalid && paymentReceived.touched" #paymentReceived="ngModel">
+            <div *ngIf="paymentReceived.touched && paymentReceived.invalid" class="invalid-feedback">
+              <div *ngIf="paymentReceived?.errors.pattern">
+                Amount should be above 0 and 4 Decimal Places
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="form-group row">
+
+          <label class="col-md-2 form-control-label">Rebate</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" name="Rebate"
+                   [(ngModel)]="model.rebate" placeholder="Rebate Amount"
+                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"
+                   [class.is-invalid]="rebate.invalid && rebate.touched" #rebate="ngModel">
+            <div *ngIf="rebate.touched && rebate.invalid" class="invalid-feedback">
+              <div *ngIf="rebate?.errors.pattern">
+                Amount should be above 0 and 4 Decimal Places
+              </div>
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label">Remark Charge</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" name="remarksCharges"
+                   [(ngModel)]="model.remarks" placeholder="Remark Charge Amount"
+                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"
+                   [class.is-invalid]="remarksChargesModel.invalid && remarksChargesModel.touched" #remarksChargesModel="ngModel">
+            <div *ngIf="remarksChargesModel.touched && remarksChargesModel.invalid" class="invalid-feedback">
+              <div *ngIf="remarksChargesModel?.errors.pattern">
+                Amount should be above 0 and 4 Decimal Places
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!--        <div class="form-group row">-->
+
+        <!--&lt;!&ndash;          <label class="col-md-2 form-control-label">Charge Name</label>&ndash;&gt;-->
+        <!--&lt;!&ndash;          <div class="col-md-4">&ndash;&gt;-->
+        <!--&lt;!&ndash;            <select id="chargeNameModel" class="form-control" name="chargeNameModel"&ndash;&gt;-->
+        <!--&lt;!&ndash;                    [class.is-invalid]="chargeNameModel.touched && chargeNameModel.invalid"&ndash;&gt;-->
+        <!--&lt;!&ndash;                    required&ndash;&gt;-->
+        <!--&lt;!&ndash;                    [(ngModel)]="model.chargeName" #chargeNameModel="ngModel">&ndash;&gt;-->
+        <!--&lt;!&ndash;              <option [value]="''" disabled>Please select a Charge Name</option>&ndash;&gt;-->
+        <!--&lt;!&ndash;              <option [value] ="'additional_charge'">Additional Charge</option>&ndash;&gt;-->
+        <!--&lt;!&ndash;              <option [value]="'waive'">Waive Charge</option>&ndash;&gt;-->
+        <!--&lt;!&ndash;              <option [value]="'u_save'">U-save</option>&ndash;&gt;-->
+        <!--&lt;!&ndash;            </select>&ndash;&gt;-->
+        <!--&lt;!&ndash;          </div>&ndash;&gt;-->
+        <!--          <label class="col-md-2 form-control-label">Add Charge</label>-->
+        <!--          <div class="col-md-2">-->
+        <!--            <button type="button" class="btn btn-md btn-success form-control"-->
+        <!--                    (click)="modal.open(chargeModel, 'sm')">-->
+        <!--              <i class="fa fa-plus"></i> Add Charge-->
+        <!--            </button>-->
+        <!--          </div>-->
+        <!--          <div class="col-md-2">-->
+        <!--            <button type="button" class="btn btn-md btn-primary form-control"-->
+        <!--                    (click)="modal.open(chargeListModel, 'md')">-->
+        <!--              <i class="fa fa-eye"></i> View Charge List-->
+        <!--            </button>-->
+        <!--          </div>-->
+
+
+        <!--          <label class="col-md-2 form-control-label">Remark Charge</label>-->
+        <!--          <div class="col-md-4">-->
+        <!--            <input type="number" class="form-control" name="remarksCharges"-->
+        <!--                   [(ngModel)]="model.remarksCharges">-->
+
+        <!--          </div>-->
+
+        <!--        </div>-->
+
+        <div class="form-group row">
+
+          <label class="col-md-2 form-control-label">Adjust Period</label>
+          <div class="col-md-2">
+            <input id="period-date-from" class="form-control"
+                   name="PeriodDateFrom" [value] = "dataInvoice?.breakDownOfCharges[1]?.billingPeriod.split('-')[0]" disabled>
+<!--                   [(ngModel)]="periodDateFrom.short"-->
+<!--                   [class.is-invalid]="PeriodDateFrom.invalid && PeriodDateFrom.touched"-->
+<!--                   [bsConfig]="adminConfig?.bootstrap.datePicker"-->
+<!--                   bsDatepicker disabled #PeriodDateFrom="ngModel">-->
+<!--            <div *ngIf="PeriodDateFrom.touched && PeriodDateFrom.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="PeriodDateFrom?.errors.required">-->
+<!--                Adjust Period is required-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+          <div class="col-md-2">
+            <input id="period-date-to" class="form-control"
+                   name="PeriodDateTo" [value] = "dataInvoice?.breakDownOfCharges[1]?.billingPeriod.split('-')[1]" disabled>
+<!--                   [(ngModel)]="periodDateTo.short" [minDate]="periodDateFrom?.moment?.toDate()"-->
+<!--                   [class.is-invalid]="PeriodDateTo.invalid && PeriodDateTo.touched"-->
+<!--                   [bsConfig]="adminConfig?.bootstrap.datePicker"-->
+<!--                   bsDatepicker disabled #PeriodDateTo="ngModel">-->
+<!--            <div *ngIf="PeriodDateTo.touched && PeriodDateTo.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="PeriodDateTo?.errors.required">-->
+<!--                Adjust Period is required-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+
+          <label class="col-md-2 form-control-label">Adjust Usage Amount (kWh)</label>
+          <div class="col-md-4">
+            <input type="number" id="adjustUsageAmount" class="form-control" name="adjustUsageAmount"
+                   disabled [value]="dataInvoice?.breakDownOfCharges[1]?.usageKWH">
+<!--                   [(ngModel)]="model.adjustUsageAmount" placeholder="Adjust Usage Amount (kWh)"-->
+<!--                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"-->
+<!--                   [class.is-invalid]="adjustUsageAmount.invalid && adjustUsageAmount.touched" disabled #adjustUsageAmount="ngModel">-->
+<!--            <div *ngIf="adjustUsageAmount.touched && adjustUsageAmount.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="adjustUsageAmount?.errors.required">-->
+<!--                Amount is required-->
+<!--              </div>-->
+<!--              <div *ngIf="adjustUsageAmount?.errors.pattern">-->
+<!--                Amount should be above 0 and 4 Decimal Places-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+
+        </div>
+
+        <div class="form-group row">
+
+          <label class="col-md-2 form-control-label">Adjust Amount Before GST</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" name="amtBeforeGST"
+                   disabled [value]="dataInvoice?.breakDownOfCharges[1]?.taxAbleAmount">
+<!--                   [(ngModel)]="amtBeforeGST" placeholder="Adjust Amount Before GST"-->
+<!--                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"-->
+<!--                   [class.is-invalid]="amtBeforeGSTModel.invalid && amtBeforeGSTModel.touched" disabled #amtBeforeGSTModel="ngModel">-->
+<!--            <div *ngIf="amtBeforeGSTModel.touched && amtBeforeGSTModel.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="amtBeforeGSTModel?.errors.required">-->
+<!--                Amount is required-->
+<!--              </div>-->
+<!--              <div *ngIf="amtBeforeGSTModel?.errors.pattern">-->
+<!--                Amount should be above 0 and 4 Decimal Places-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+
+          <label class="col-md-2 form-control-label">Adjust GST Amount</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" name="adjustGstAmt"
+                   [(ngModel)]="adjustGstAmt"
+                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"
+                   [class.is-invalid]="adjustGstAmtModel.invalid && adjustGstAmtModel.touched" disabled #adjustGstAmtModel="ngModel">
+            <div *ngIf="adjustGstAmtModel.touched && adjustGstAmtModel.invalid" class="invalid-feedback">
+              <div *ngIf="adjustGstAmtModel?.errors.required">
+                Amount is required
+              </div>
+              <div *ngIf="adjustGstAmtModel?.errors.pattern">
+                Amount should be above 0 and 4 Decimal Places
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-group row">
+
+          <label class="col-md-2 form-control-label">Adjust Rate</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" name="AdjustRate"
+                   disabled [value]="dataInvoice?.breakDownOfCharges[1]?.rate">
+<!--                   [(ngModel)]="adjustRateChargeEvent" placeholder="Adjust Rate"-->
+<!--                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"-->
+<!--                   [class.is-invalid]="AdjustRate.invalid && AdjustRate.touched" disabled #AdjustRate="ngModel">-->
+<!--            <div *ngIf="AdjustRate.touched && AdjustRate.invalid" class="invalid-feedback">-->
+<!--              <div *ngIf="AdjustRate?.errors.required">-->
+<!--                Amount is required.-->
+<!--              </div>-->
+<!--              <div *ngIf="AdjustRate?.errors.pattern">-->
+<!--                Amount should be above 0 and 4 Decimal Places-->
+<!--              </div>-->
+<!--            </div>-->
+          </div>
+
+          <label class="col-md-2 form-control-label">Adjust Chargeable Amount</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" [value] ="dataInvoice?.breakDownOfCharges[1]?.chargeableAmount"
+                   name="AdjustChargeableAmount" disabled>
+          </div>
+
+        </div>
+
+        <div class="form-group row">
+
+          <label class="col-md-2 form-control-label">Off Peak</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value] ="dataInvoice?.offPeakConsumption">
+          </div>
+
+          <label class="col-md-2 form-control-label">Peak Period Consumption</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled [value] ="dataInvoice?.peakConsumption">
+          </div>
+        </div>
+
+        <div class="form-group row">
+
+          <label class="col-md-2 form-control-label" style="font-weight: bold">Total amount payable</label>
+          <div class="col-md-4">
+            <input type="number" class="form-control" [(ngModel)]="model.newBalance"
+                   name="NewOutstandingBalance" placeholder="New Outstanding Balance"
+                   [pattern]="adminConfig.validation.Pattern4DecimalPlaces"
+                   [class.is-invalid]="NewOutstandingBalance.invalid && NewOutstandingBalance.touched" #NewOutstandingBalance="ngModel">
+            <div *ngIf="NewOutstandingBalance.touched && NewOutstandingBalance.invalid" class="invalid-feedback">
+<!--              <div *ngIf="NewOutstandingBalance?.errors.required">-->
+<!--                Amount is required.-->
+<!--              </div>-->
+              <div *ngIf="NewOutstandingBalance?.errors.pattern">
+                Amount should be above 0 and 4 Decimal Places
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!--        <div class="form-group row">-->
+
+        <!--          <label class="col-md-2 form-control-label">Adjust Rate</label>-->
+        <!--          <div class="col-md-4">-->
+        <!--            <input type="number" class="form-control" [(ngModel)]="adjustRate" name="adjustRate" required-->
+        <!--            [class.is-invalid]="adjustRateModel.invalid && adjustRateModel.touched" #adjustRateModel="ngModel">-->
+        <!--          </div>-->
+
+        <!--        </div>-->
+
+
+        <!--        <div class="form-group row">-->
+        <!--          <label class="col-md-2 form-control-label">Remarks</label>-->
+        <!--          <div class="col-md-4">-->
+        <!--            <input type="text" class="form-control" disabled-->
+        <!--                   [value]="model.remarks">-->
+        <!--          </div>-->
+
+        <!--          <label class="col-md-2 form-control-label">Documents</label>-->
+        <!--          <div class="col-md-4">-->
+        <!--            <div>-->
+        <!--              <a [href]="model.invoiceDocument?.fullFilePath">{{ model.invoiceDocument?.displayName }}</a>-->
+        <!--            </div>-->
+        <!--            <div *ngIf="model.invoiceDocument == null">No document uploaded</div>-->
+        <!--            <button type="button" class="btn btn-md btn-success"-->
+        <!--                    (click)="modal.open(uploadFilesModal, 'lg')">-->
+        <!--              <i class="fa fa-upload"></i> Upload document-->
+        <!--            </button>-->
+        <!--          </div>-->
+        <!--        </div>-->
+      </div>
+    </form>
+
+
+  </div>
+</div>
+

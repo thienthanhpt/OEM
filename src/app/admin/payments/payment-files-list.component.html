@@ -1,0 +1,68 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fa fa-align-justify"></i> {{ data.title }}
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+
+    <!-- Data table -->
+    <div class="position-relative block-loading">
+      <div class="btn-table-top-right">
+        <button type="button" class="btn btn-sm btn-success" (click)="openUploadFilesModal()">
+          <i class="fa fa-upload"></i> Upload
+        </button>
+      </div>
+      <data-table id="table"
+                  [items]="items"
+                  [itemCount]="meta.count"
+                  [page]="meta.page"
+                  [limit]="20"
+                  [sortBy]="'createdDate'" [sortAsc]="false"
+                  [indexColumnHeader]="'#'"
+                  [substituteRows]="false"
+                  (reload)="reloadItems($event)">
+        <data-table-column property="fileName" header="File Name" [sortable]="true"></data-table-column>
+        <data-table-column property="filePath" header="File Path" [sortable]="true"></data-table-column>
+        <data-table-column property="fileDate.short" header="Uploaded Date" [sortable]="true"></data-table-column>
+        <data-table-column property="createdDate.short" header="Created Date" [sortable]="true"></data-table-column>
+        <data-table-column property="statusDisplay" header="Status" [sortable]="true"></data-table-column>
+        <data-table-column property="reason" header="Reason" [sortable]="true"></data-table-column>
+
+        <data-table-column header="Actions">
+          <ng-template #dataTableHeader let-item="item">
+            <i>Actions</i>
+          </ng-template>
+          <ng-template #dataTableCell let-item="item">
+            <a class="btn btn-primary btn-sm" [href]="item.document?.fullFilePath" download>
+              <i class="fas fa-download"></i>
+            </a>
+            <a class="btn btn-primary btn-sm text-white"
+               *ngIf="item.status !== PaymentStatus.Success && item.status !== PaymentStatus.Invalid"
+               (click)="paymentToApprove = item; modal.open(approvePaymentFileModal)" title="Approve">
+              <i class="fas fa-check"></i>
+            </a>
+          </ng-template>
+        </data-table-column>
+      </data-table>
+    </div>
+  </div>
+
+  <ng-template #approvePaymentFileModal>
+    <div class="modal-body">
+      <h4 class="modal-title text-center mb-2">
+        Approve file:
+      </h4>
+      <p class="text-center">
+        <i>{{ paymentToApprove?.document?.displayName }}</i>
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-md mr-auto" (click)="modal.hide()">Cancel</button>
+      <button type="button" class="btn btn-md btn-primary" (click)="approvePaymentFile()">
+        <span class="font-weigh-bold">Confirm</span>
+      </button>
+    </div>
+  </ng-template>
+</div>

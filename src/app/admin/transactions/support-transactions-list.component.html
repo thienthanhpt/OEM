@@ -1,0 +1,47 @@
+<div class="card">
+
+  <div class="card-header">
+    <i class="fas fa-align-justify"></i> {{ data.title }}
+  </div>
+
+  <div class="card-body" [loadingDisplay]="isLoading">
+    <!-- Data table -->
+    <data-table id="table"
+                [items]="items" [itemCount]="meta.count"
+                [page]="meta.page" [limit]="20"
+                [sortBy]="'id'" [sortAsc]="false"
+                [indexColumnHeader]="'#'" [substituteRows]="false"
+                (reload)="reloadItems($event)">
+      <data-table-column [property]="'transactionId'" header="Transaction ID" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'requestId'" header="Request ID" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'requestType'" header="Request Type" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'problemClassification'" header="Problem Classification" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'severity'" header="Severity" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'type'" header="Type" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'subType1'" header="Sub-type 1" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'subType2'" header="Sub-type 2" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'customerCategory'" header="Customer Category" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'customerSubCategory'" header="Customer Sub-category" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'documentId'" header="Document ID" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'documentIdType'" header="Document ID Type" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newEmailAddress'" header="New Email Address" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newMobileNumber'" header="New Mobile Number" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newDocumentId'" header="New Document ID" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newDocumentIdType'" header="New Document ID Type" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newDepositAmount'" header="New Deposit Amount" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newCustomerCategory'" header="New Customer Category" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newCustomerSubCategory'" header="New Customer Sub-category" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newBillingAccount'" header="New Billing Account" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'newBillingCycle'" header="New Billing Cycle" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'productName'" header="Product Name" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'productType'" header="Product Type" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'partNumber'" header="Part Number" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'serviceId'" header="Service ID" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'serviceAssetId'" header="Service Asset ID" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'note'" header="Note" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'noteType'" header="Note Type" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'remarks'" header="Remarks" [visible]="false" [sortable]="true"></data-table-column>
+      <data-table-column [property]="'createdTime.short'" header="Created Time" [visible]="false" [sortable]="true"></data-table-column>
+    </data-table>
+  </div>
+</div>

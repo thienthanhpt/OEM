@@ -1,0 +1,2651 @@
+<div class="pb-2">
+  <i class="fas fa-angle-left cursor-pointer text-muted" [routerLink]="linkToList()"></i>
+  <span class="text-muted cursor-pointer" [routerLink]="linkToList()">Return to List</span>
+</div>
+
+<ng-container *ngIf="is('new') && !is('detail')">
+  <div class="card border-top border-radius">
+    <div class="card-header">
+      <div class="float-right">
+        <button type="button" *ngIf="!is('detail')"
+                [ngClass]="['btn btn-md', is('new') ? 'btn-success' : 'btn-primary']"
+                (click)="modelForm.ngSubmit.emit()"
+                [disabled]="!modelForm.form.valid || isLoading">
+          <i class="fa fa-check-circle"></i> {{ is('new') ? 'Add' : 'Save' }}
+        </button>
+        <button type="button" *ngIf="is('new')"
+                [ngClass]="['btn btn-md', is('new') ? 'btn-success' : 'btn-primary']"
+                (click)="redirectToCreateConsumer = true; modelForm.ngSubmit.emit()"
+                [disabled]="!modelForm.form.valid || isLoading">
+          <i class="fa fa-check-circle"></i>Add & Create Consumer
+        </button>
+        <a *ngIf="is('detail')" class="btn btn-md btn-primary text-white"
+           [routerLink]="['../edit']" [queryParams]="getHistoryParams()">
+          <i class="fas fa-edit"></i> Edit
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body block-loading" [class.is-loading]="isLoading">
+      <form method="post" enctype="multipart/form-data" class="form-horizontal admin-crud-form"
+            [class.admin-crud-form]="!is('detail')"
+            (ngSubmit)="onSubmit()"
+            #modelForm="ngForm">
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="customer-type">Customer Type</label>
+          <div class="col-md-4">
+            <ng-container *ngIf="!is('detail')">
+              <select name="customer-type" id="customer-type" class="form-control"
+                      [class.is-invalid]="type.touched && type.invalid"
+                      required
+                      [(ngModel)]="model.type" #type="ngModel">
+                <option *ngIf="is('new')" [ngValue]="null" disabled>Please select a customer type</option>
+                <option *ngFor="let option of customerTypeOptions | toArray" [ngValue]="option.key">{{ option.value }}</option>
+              </select>
+
+              <div *ngIf="type.touched && type.invalid" class="invalid-feedback">
+
+                <div *ngIf="type?.errors.required">
+                  Customer Type is required.
+                </div>
+
+              </div>
+            </ng-container>
+
+            <input type="text" *ngIf="is('detail')" class="form-control" disabled
+                   [value]="model.typeDisplay">
+          </div>
+
+          <label class="col-md-2 form-control-label required" for="full-name">Customer Name</label>
+          <div class="col-md-4">
+            <input type="text" id="full-name" name="full-name" class="form-control" placeholder="Customer Name"
+                   [class.is-invalid]="name.touched && name.invalid"
+                   [disabled]="is('detail')"
+                   required
+                   [(ngModel)]="model.name" #name="ngModel">
+
+            <div *ngIf="name.touched && name.invalid" class="invalid-feedback">
+
+              <div *ngIf="name?.errors.required">
+                Customer Name is required.
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <ng-container *ngIf="model.type !== CustomerType.Residential">
+            <label class="col-md-2 form-control-label required" for="gst-registered-no">GST Registered No</label>
+            <div class="col-md-4">
+              <input type="text" id="gst-registered-no" name="gst-registered-no" class="form-control" placeholder="GST Registered No"
+                     [class.is-invalid]="gstRegisteredNo.touched && gstRegisteredNo.invalid"
+                     [disabled]="is('detail')"
+                     required maxlength="32"
+                     [(ngModel)]="model.gstRegisteredNo" #gstRegisteredNo="ngModel">
+
+              <div *ngIf="gstRegisteredNo.touched && gstRegisteredNo.invalid" class="invalid-feedback">
+
+                <div *ngIf="gstRegisteredNo?.errors.required">
+                  GST Registered No is required.
+                </div>
+                <div *ngIf="gstRegisteredNo?.errors.maxlength">
+                  GST Registered No is limited to 32 characters.
+                </div>
+
+              </div>
+            </div>
+          </ng-container>
+
+          <label class="col-md-2 form-control-label required" for="uen-acra">UEN/ACRA</label>
+          <div class="col-md-4">
+            <input type="text" id="uen-acra" name="uen-acra" class="form-control" placeholder="UEN/ACRA"
+                   [class.is-invalid]="identificationNo.touched && identificationNo.invalid"
+                   [disabled]="is('detail')"
+                   required maxlength="32"
+                   [(ngModel)]="model.identificationNo" #identificationNo="ngModel">
+
+            <div *ngIf="identificationNo.touched && identificationNo.invalid" class="invalid-feedback">
+
+              <div *ngIf="identificationNo?.errors.required">
+                UEN/ACRA is required.
+              </div>
+              <div *ngIf="identificationNo?.errors.maxlength">
+                UEN/ACRA is limited to 32 characters.
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="new-address">Address</label>
+          <div class="col-md-4">
+            <input type="text" id="new-address" name="new-address" class="form-control" placeholder="Address"
+                   [class.is-invalid]="address.touched && address.invalid"
+                   [disabled]="is('detail')"
+                   required
+                   [(ngModel)]="model.address" #address="ngModel">
+
+            <div *ngIf="address.touched && address.invalid" class="invalid-feedback">
+
+              <div *ngIf="address?.errors.required">
+                Address is required.
+              </div>
+
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label required" for="new-postal-code">Postal Code</label>
+          <div class="col-md-4">
+            <input type="text" id="new-postal-code" name="new-postal-code" class="form-control" placeholder="Postal Code"
+                   [class.is-invalid]="postalCode.touched && postalCode.invalid"
+                   [disabled]="is('detail')"
+                   required maxlength="8" pattern="^[0-9]*$"
+                   [(ngModel)]="model.postalCode" #postalCode="ngModel">
+
+            <div *ngIf="postalCode.touched && postalCode.invalid" class="invalid-feedback">
+
+              <div *ngIf="postalCode?.errors.required">
+                Postal Code is required.
+              </div>
+              <div *ngIf="postalCode?.errors.maxlength">
+                Postal Code is limited to 8 characters.
+              </div>
+              <div *ngIf="postalCode?.errors.pattern">
+                Postal Code MUST contains only numbers.
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="new-mobile-phone">Mobile Phone</label>
+          <div class="col-md-4">
+            <input type="text" id="new-mobile-phone" name="new-mobile-phone" class="form-control" placeholder="Mobile Phone"
+                   [class.is-invalid]="mobilePhone.touched && mobilePhone.invalid"
+                   [disabled]="is('detail')"
+                   required [pattern]="adminConfig?.validation.mobileNumber"
+                   [(ngModel)]="model.mobilePhone" #mobilePhone="ngModel">
+
+            <div *ngIf="mobilePhone.touched && mobilePhone.invalid" class="invalid-feedback">
+
+              <div *ngIf="mobilePhone?.errors.required">
+                Mobile Phone is required.
+              </div>
+
+              <div *ngIf="mobilePhone?.errors.pattern">
+                Mobile Phone is invalid.
+              </div>
+
+            </div>
+          </div>
+
+          <label class="col-md-2 form-control-label required" for="new-emailAddress">Email Address</label>
+          <div class="col-md-4">
+            <input type="email" id="new-emailAddress" name="new-emailAddress" class="form-control" placeholder="Email Address"
+                   [class.is-invalid]="emailAddress.touched && emailAddress.invalid"
+                   [disabled]="is('detail')"
+                   email required
+                   [(ngModel)]="model.emailAddress" #emailAddress="ngModel">
+
+            <div *ngIf="emailAddress.touched && emailAddress.invalid" class="invalid-feedback">
+
+              <div *ngIf="emailAddress?.errors.required">
+                Email address is required.
+              </div>
+              <div *ngIf="!emailAddress.errors.required && emailAddress?.errors.email">
+                "{{ emailAddress.value }}" is not a valid email.
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="country">Country</label>
+          <div class="col-md-4">
+            <ng-container *ngIf="!is('detail')">
+              <select name="country" id="country" class="form-control"
+                      [class.is-invalid]="country.touched && country.invalid"
+                      required
+                      [(ngModel)]="model.country" #country="ngModel">
+                <option *ngIf="is('new')" [ngValue]="null" disabled>Please select a country</option>
+                <option *ngFor="let option of countryOptions | toArray" [ngValue]="option.key">{{ option.value }}</option>
+              </select>
+
+              <div *ngIf="country.touched && country.invalid" class="invalid-feedback">
+
+                <div *ngIf="country?.errors.required">
+                  Country is required.
+                </div>
+
+              </div>
+            </ng-container>
+
+            <input type="text" *ngIf="is('detail')" class="form-control" disabled
+                   [value]="model.countryDisplay">
+          </div>
+
+          <label class="col-md-2 form-control-label" for="saleTeam">Account Manager for Renewal</label>
+          <div class="col-md-4">
+            <ng-container *ngIf="!is('detail')">
+              <select name="saleTeam" id="saleTeam" class="form-control"
+                      [class.is-invalid]="saleTeam.touched && saleTeam.invalid"
+                      [ngModel]="model.saleTeam?.id" (change)="selectById($event.target.value, 'model.saleTeam', 'saleTeamList')" #saleTeam="ngModel">
+                <option [value]="null">Please select a Account Manager</option>
+                <option *ngFor="let saleTeam of saleTeamList" [value]="saleTeam.id">{{ saleTeam.name }}</option>
+              </select>
+
+              <div *ngIf="saleTeam.touched && saleTeam.invalid" class="invalid-feedback">
+
+                <div *ngIf="saleTeam?.errors.required">
+                  Account Manager for Renewal is required.
+                </div>
+
+              </div>
+            </ng-container>
+
+            <input type="text" *ngIf="is('detail')" class="form-control" disabled
+                   [value]="model.saleTeam?.name">
+          </div>
+
+        </div>
+
+        <div *ngIf="is('detail')" class="form-group row">
+          <label class="col-md-2 form-control-label">Creation Time</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.createdTime.short">
+
+          </div>
+
+          <label class="col-md-2 form-control-label">Last Update Time</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" disabled
+                   [value]="model.updatedTime.short">
+
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="!is('new')">
+  <!--CUSTOMER-->
+  <div class="customer-review card border-top border-radius">
+    <div class="card-header border-0 bg-white" (click)="tabStatus.customer = !tabStatus.customer;">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': (tabStatus.customer == true)}"></i>
+      <span class="font-weight-bold h5">Customer <i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.customer"></i></span>
+    </div>
+
+    <div class="card-body text-center" *ngIf="tabStatus.customer && !visibleTab.customer && !loadingDataTabs.customer">Data Not Found</div>
+
+    <div class="card-body" *ngIf="tabStatus.customer && visibleTab.customer && !loadingDataTabs.customer">
+      <div class="row m-0 justify-content-between pt-2">
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [currentValue]="model.typeDisplay"
+                                    fieldName="Type">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="model.name"
+                                    fieldName="Name"
+                                    modelFieldName="name"
+                                    [isRequired]="true"
+                                    [isInputting]="fieldMapInput['name']"
+                                    [isUpdating]="fieldMapUpdating['name']"
+                                    (edit)="editFieldByCustomFieldInput('name')"
+                                    (update)="updateCustomerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-5 p-0">
+          <admin-custom-field-input [currentValue]="model.spAccountNo"
+                                    fieldName="Account No.">
+          </admin-custom-field-input>
+        </div>
+      </div>
+
+      <div class="row m-0 justify-content-between pt-2">
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Dropdown"
+                                    [currentValueDisplay]="model.identificationTypeDisplay"
+                                    [currentValue]="model.identificationType"
+                                    fieldName="ID Type"
+                                    modelFieldName="identificationType"
+                                    [isRequired]="true"
+                                    [isUpdating]="fieldMapUpdating['identificationType']"
+                                    [listOptions]="IDENTIFICATION_TYPE_OPTIONS"
+                                    [isInputting]="fieldMapInput['identificationType']"
+                                    (edit)="editFieldByCustomFieldInput('identificationType')"
+                                    (update)="updateCustomerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="model.mobilePhone"
+                                    fieldName="Mobile"
+                                    modelFieldName="mobilePhone"
+                                    [isRequired]="true"
+                                    [pattern]="adminConfig?.validation.mobileNumber"
+                                    [isInputting]="fieldMapInput['mobilePhone']"
+                                    [isUpdating]="fieldMapUpdating['mobilePhone']"
+                                    (edit)="editFieldByCustomFieldInput('mobilePhone')"
+                                    (update)="updateCustomerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-5 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="model.postalCode"
+                                    fieldName="Billing Postal Code"
+                                    modelFieldName="postalCode"
+                                    [isRequired]="true"
+                                    [maxLength]="8"
+                                    [isInputting]="fieldMapInput['postalCode']"
+                                    [isUpdating]="fieldMapUpdating['postalCode']"
+                                    (edit)="editFieldByCustomFieldInput('postalCode')"
+                                    (update)="updateCustomerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+      </div>
+
+      <div class="row m-0 justify-content-between pt-2">
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="model.identificationNo"
+                                    fieldName="ID No."
+                                    modelFieldName="identificationNo"
+                                    [isRequired]="true"
+                                    [pattern]="adminConfig?.validation.singaporeIdentificationNo"
+                                    [isInputting]="fieldMapInput['identificationNo']"
+                                    [isUpdating]="fieldMapUpdating['identificationNo']"
+                                    (edit)="editFieldByCustomFieldInput('identificationNo')"
+                                    (update)="updateCustomerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Email"
+                                    [currentValue]="model.emailAddress"
+                                    fieldName="Email"
+                                    modelFieldName="emailAddress"
+                                    [isRequired]="true"
+                                    [isUpdating]="fieldMapUpdating['emailAddress']"
+                                    [isInputting]="fieldMapInput['emailAddress']"
+                                    (edit)="editFieldByCustomFieldInput('emailAddress')"
+                                    (update)="updateCustomerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-5 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="model.address"
+                                    fieldName="Billing Address"
+                                    modelFieldName="address"
+                                    [isInputting]="fieldMapInput['address']"
+                                    [isUpdating]="fieldMapUpdating['address']"
+                                    (edit)="editFieldByCustomFieldInput('address')"
+                                    (update)="updateCustomerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+      </div>
+
+      <div class="row m-0 justify-content-between pt-2">
+        <div class="col-md-3 p-0" *ngIf="model.type !== CustomerType.Residential">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="model.gstRegisteredNo"
+                                    fieldName="GST Registered No"
+                                    modelFieldName="gstRegisteredNo"
+                                    [isUpdating]="fieldMapUpdating['gstRegisteredNo']"
+                                    [isInputting]="fieldMapInput['gstRegisteredNo']"
+                                    (edit)="editFieldByCustomFieldInput('gstRegisteredNo')"
+                                    (update)="updateCustomerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0" *ngIf="model.type === CustomerType.Residential">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="currentConsumer?.landlordAccount"
+                                    fieldName="Landlord Account"
+                                    modelFieldName="landlordAccount"
+                                    [maxLength]="16"
+                                    [pattern]="adminConfig?.validation.alphaNumberic"
+                                    [isUpdating]="fieldMapUpdating['landlordAccount']"
+                                    [isInputting]="fieldMapInput['landlordAccount']"
+                                    (edit)="editFieldByCustomFieldInput('landlordAccount')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0" *ngIf="model.type === CustomerType.Residential">
+          <admin-custom-field-input [inputType]="InputFieldType.DropdownYesNo"
+                                    [currentValue]="currentConsumer?.temporaryDisconnected"
+                                    fieldName="Temporary Disconnected"
+                                    modelFieldName="temporaryDisconnected"
+                                    [listOptions]="optionYesNo"
+                                    [isUpdating]="fieldMapUpdating['temporaryDisconnected']"
+                                    [isInputting]="fieldMapInput['temporaryDisconnected']"
+                                    (edit)="editFieldByCustomFieldInput('temporaryDisconnected')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-5"></div>
+      </div>
+
+      <div class="row m-0 p-0 pt-2">
+        <div class="offset-6 col-6 p-0 text-right">
+          <span class="col-3 field-display-time">Created time {{ model.createdTime.short }}</span>
+          <span class="col-3 field-display-time">Last Update time {{ model.updatedTime.short }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-4" *ngIf="consumers.length > 0">
+    <select name="service-address" id="service-address" class="col-7 border-dark border-radius"
+              (change)="selectAddress($event)">
+      <option *ngFor="let consumer of consumers"
+              [value]="consumer.id">
+        Service Address {{ consumer.premiseAddress }}, {{ consumer.premisePostalCode }}
+      </option>
+    </select>
+  </div>
+
+  <!--CONSUMER-->
+  <div class="consumer-review card border-top border-radius">
+    <div class="card-header border-0 bg-white" (click)="tabStatus.consumer = !tabStatus.consumer">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': tabStatus.consumer}"></i>
+      <span class="font-weight-bold h5">Consumer <i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.customer || isConsumerSectionLoading"></i></span>
+      <div class="d-inline-block color-green ml-5" *ngIf="customer && tabStatus.consumer && currentConsumer && !isConsumerSectionLoading">
+        <i class="fas fa-circle"></i>
+        <span class="text-success">{{ currentConsumer?.statusDisplay }}</span>
+      </div>
+      <div class="d-inline-block float-right" *ngIf="customer && tabStatus.consumer && currentConsumer && !isConsumerSectionLoading">
+        <button class="btn btn-success"
+                [loadingDisable]="loadingDataTabs.consumer" [displaySpinner]="true"
+                (click)="$event.stopPropagation(); openCreateConsumerChargeModal(ConsumerChargeType.Additional)">
+          <i class="fas fa-plus pr-1"></i>Add Charge
+        </button>
+        <button class="btn btn-success"
+                [loadingDisable]="loadingDataTabs.consumer" [displaySpinner]="true"
+                (click)="$event.stopPropagation(); openCreateConsumerChargeModal(ConsumerChargeType.USave)">
+          <i class="fas fa-plus pr-1"></i>U-save
+        </button>
+        <button class="btn btn-primary"
+                [loadingDisable]="loadingDataTabs.consumer" [displaySpinner]="true"
+                (click)="$event.stopPropagation(); openCreateConsumerChargeModal(ConsumerChargeType.Waive)">
+          <i class="fas fa-plus-circle pr-1"></i>Waive Charge
+        </button>
+        <!--<button class="btn bg-white border-danger"-->
+                <!--[loadingDisable]="loadingDataTabs.consumer" [displaySpinner]="true"-->
+                <!--(click)="$event.stopPropagation(); initDeactivateConfirm(); modal.open(deactivateConfirmModal, 'md')">-->
+          <!--Deactivate-->
+        <!--</button>-->
+      </div>
+    </div>
+
+    <div class="card-body text-center pt-0" *ngIf="(tabStatus.consumer && !customer) || (tabStatus.consumer && !isConsumerSectionLoading && !currentConsumer)">No consumer found</div>
+
+    <div class="card-body" *ngIf="customer && tabStatus.consumer && currentConsumer && !isConsumerSectionLoading">
+      <div class="row m-0 pt-2 justify-content-between">
+        <div class="col-md-5 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="currentConsumer?.premiseAddress"
+                                    fieldName="Premise Address"
+                                    modelFieldName="premiseAddress"
+                                    [isUpdating]="fieldMapUpdating['premiseAddress']"
+                                    [isRequired]="true"
+                                    [isInputting]="fieldMapInput['premiseAddress']"
+                                    (edit)="editFieldByCustomFieldInput('premiseAddress')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="currentConsumer?.msslNo"
+                                    fieldName="MSSL No."
+                                    modelFieldName="msslNo"
+                                    [isUpdating]="fieldMapUpdating['msslNo']"
+                                    [isRequired]="true"
+                                    [maxLength]="16"
+                                    [pattern]="adminConfig?.validation.ebsNo"
+                                    [isInputting]="fieldMapInput['msslNo']"
+                                    (edit)="editFieldByCustomFieldInput('msslNo')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [currentValue]="currentConsumer?.referralCode"
+                                    fieldName="Referral Code">
+          </admin-custom-field-input>
+        </div>
+      </div>
+
+      <div class="row m-0 pt-2 justify-content-between">
+        <div class="col-md-5 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="currentConsumer?.premisePostalCode"
+                                    fieldName="Postal Code"
+                                    modelFieldName="premisePostalCode"
+                                    [isUpdating]="fieldMapUpdating['premisePostalCode']"
+                                    [isRequired]="true"
+                                    [isInputting]="fieldMapInput['premisePostalCode']"
+                                    (edit)="editFieldByCustomFieldInput('premisePostalCode')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="currentConsumer?.ebsNo"
+                                    fieldName="EBS No."
+                                    modelFieldName="ebsNo"
+                                    [isUpdating]="fieldMapUpdating['ebsNo']"
+                                    [isRequired]="true"
+                                    [maxLength]="16"
+                                    [pattern]="adminConfig?.validation.ebsNo"
+                                    [isInputting]="fieldMapInput['ebsNo']"
+                                    (edit)="editFieldByCustomFieldInput('ebsNo')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="currentConsumer?.shBillingAccount"
+                                    fieldName="Starhub Acc. No."
+                                    modelFieldName="shBillingAccount"
+                                    [isUpdating]="fieldMapUpdating['shBillingAccount']"
+                                    [isInputting]="fieldMapInput['shBillingAccount']"
+                                    (edit)="editFieldByCustomFieldInput('shBillingAccount')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+      </div>
+
+      <div class="row m-0 pt-2 justify-content-between">
+        <div class="col-md-5 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Dropdown"
+                                    [currentValue]="currentConsumer?.accountType"
+                                    [currentValueDisplay]="currentConsumer?.accountTypeDisplay"
+                                    fieldName="Account Type"
+                                    modelFieldName="accountType"
+                                    [listOptions]="accountTypeOptions"
+                                    [isUpdating]="fieldMapUpdating['accountType']"
+                                    [isInputting]="fieldMapInput['accountType']"
+                                    (edit)="editFieldByCustomFieldInput('accountType')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [currentValue]="currentConsumer?.dwellingType"
+                                    fieldName="Dwelling Type">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="currentConsumer?.remarks"
+                                    fieldName="Remarks"
+                                    modelFieldName="remarks"
+                                    [isUpdating]="fieldMapUpdating['remarks']"
+                                    [isInputting]="fieldMapInput['remarks']"
+                                    (edit)="editFieldByCustomFieldInput('remarks')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+      </div>
+
+      <div class="row m-0 pt-2 justify-content-between">
+        <div class="col-md-5 p-0">
+          <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                    [currentValue]="currentConsumer?.voltageType"
+                                    fieldName="Voltage Type"
+                                    modelFieldName="voltageType"
+                                    [isUpdating]="fieldMapUpdating['voltageType']"
+                                    [isRequired]="true"
+                                    [isInputting]="fieldMapInput['voltageType']"
+                                    (edit)="editFieldByCustomFieldInput('voltageType')"
+                                    (update)="updateConsumerByCustomFieldInput($event)">
+          </admin-custom-field-input>
+        </div>
+
+        <div class="col-md-3 custom-field">
+        </div>
+
+        <div class="col-md-3 custom-field">
+        </div>
+      </div>
+
+      <div class="position-relative mt-3">
+        <label class="m-0 font-weight-bold">
+          <u class="underline">Meters</u>
+        </label>
+        <div class="btn-table-top-right">
+          <button type="button" class="btn btn-sm btn-success"
+                  [loadingDisable]="loadingDataTabs.meter" [displaySpinner]="true"
+                  (click)="initConsumerMeter(); modal.open(consumerMeterModal, 'md')">
+            Create Meter
+          </button>
+        </div>
+        <data-table id="consumerMetersTable"
+                    [items]="consumerMetersList"
+                    [limit]="metersPagination.limit"
+                    [sortBy]="metersPagination.sortBy"
+                    [itemCount]="consumerMetersMeta.count"
+                    [page]="consumerMetersMeta.page"
+                    [indexColumnHeader]="'#'"
+                    [substituteRows]="false"
+                    [minHeight]="false"
+                    (reload)="reloadMeters($event)"
+                    [showReloading]="true">
+          <data-table-column [property]="'meterId'" header="Meter ID" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'typeDisplay'" header="Meter Type" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'statusDisplay'" header="Meter Status" [sortable]="true"></data-table-column>
+          <data-table-column header="Actions">
+            <ng-template #dataTableHeader let-item="item">
+              <i>Actions</i>
+            </ng-template>
+            <ng-template #dataTableCell let-item="item">
+              <button class="btn btn-primary btn-sm" (click)="initConsumerMeter(item); modal.open(consumerMeterModal, 'md')">
+                <i class="fas fa-edit"></i>
+              </button>
+            </ng-template>
+          </data-table-column>
+        </data-table>
+      </div>
+      <div class="d-inline-block w-100 pt-4">
+        <div class="offset-6 col-6 p-0 text-right">
+          <span class="col-3 field-display-time">Created time {{ currentConsumer?.createdTime.short }}</span>
+          <span class="col-3 field-display-time">Last Update time {{ currentConsumer?.updatedTime.short }}</span>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #deactivateConfirmModal>
+      <div class="modal-header">
+        <h4 class="modal-title text-center">
+          Deactivate consumer
+        </h4>
+      </div>
+      <div class="modal-body">
+        <form action="" method="post" class="form-horizontal" #modalDeactivateForm="ngForm">
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label" for="customer-name-deactivate">Customer Name</label>
+            <div class="col-md-9">
+              <input id="customer-name-deactivate" name="customer-name-deactivate" [value]="currentConsumer?.customer?.name" class="form-control" disabled />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label" for="mssl-no-deactivate">MSSL No</label>
+            <div class="col-md-9">
+              <input id="mssl-no-deactivate" name="mssl-no-deactivate" [value]="currentConsumer?.msslNo" class="form-control" disabled />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label" for="effective-date-deactivate">
+              Effective Date
+            </label>
+            <div class="col-md-9">
+              <input id="effective-date-deactivate" name="effective-date-deactivate" class="form-control" placeholder="Effective Date"
+                     bsDatepicker required
+                     [bsConfig]="adminConfig?.bootstrap.datePicker"
+                     [(ngModel)]="currentConsumer.effectiveDate.short" #effectiveDateField="ngModel">
+
+              <div *ngIf="effectiveDateField.touched && effectiveDateField.invalid" class="invalid-feedback">
+                <div *ngIf="effectiveDateField?.errors?.required">
+                  Effective Date is required.
+                </div>
+                <div *ngIf="effectiveDateField?.errors?.invalidDate">
+                  Effective Date is invalid.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label required" for="rejected-reason-deactivate">Reason</label>
+            <div class="col-md-9">
+              <select id="rejected-reason-deactivate" name="rejected-reason-deactivate" class="form-control"
+                      [class.is-invalid]="reasonField.touched && reasonField.invalid"
+                      required
+                      [(ngModel)]="currentConsumer.reason" #reasonField="ngModel">
+                <option value="" disabled>Please select a deactivate reason</option>A
+                <option *ngFor="let reason of consumerDeactivateReasons" [value]="reason">{{ reason }}</option>
+              </select>
+              <div *ngIf="reasonField.touched && reasonField.invalid" class="invalid-feedback">
+                <div *ngIf="reasonField?.errors.required">
+                  Reason is required.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="currentConsumer?.reason" class="form-group row">
+            <label class="col-md-3 form-control-label" for="competitor-deactivate">Competitor</label>
+            <div class="col-md-9">
+              <select id="competitor-deactivate" name="competitor-deactivate" class="form-control"
+                      [ngModel]="selectedRetailer?.id" (change)="selectById($event.target.value, 'selectedRetailer', 'retailerList')" #competitor="ngModel">
+                <option value="null" disabled>Please select a competitor</option>
+                <option *ngFor="let retailer of retailerList" [value]="retailer.id">{{ retailer.name }}</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary mr-auto" (click)="modal.hide()">Cancel</button>
+        <button type="button" class="btn btn-danger"
+                (click)="modal.hide(); modal.open(deactivateNotifyModal)"
+                [disabled]="!modalDeactivateForm.form.valid">
+          Confirm
+        </button>
+      </div>
+    </ng-template>
+
+    <ng-template #deactivateNotifyModal>
+      <div class="modal-header d-none">
+        <h4 class="modal-title text-center">
+          Confirmation
+        </h4>
+      </div>
+      <div class="modal-body">
+        <p>Before to confirm the termination/deactivation, kindly note the following:</p>
+        <ul>
+          <li>This request should only come from EBT,</li>
+          <li>This action will also terminate customer's contract with Starhub,</li>
+          <li>Therefore, a termination request will be sent to Starhub,</li>
+        </ul>
+        <p>Do you still want to continue?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary mr-auto" (click)="modal.hide()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="onDeactivateConfirm()">Yes</button>
+      </div>
+    </ng-template>
+
+    <ng-template #consumerMeterModal>
+      <div class="modal-body admin-crud-form">
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label required" for="meterId">Meter ID</label>
+          <div class="col-md-9">
+            <input name="meterId" id="meterId" class="form-control" placeholder="Meter ID"
+                   [class.is-invalid]="meterId.touched && meterId.invalid"
+                   required
+                   [(ngModel)]="consumerMeterToProcess.meterId" #meterId="ngModel"/>
+
+            <div *ngIf="meterId.touched && meterId.invalid" class="invalid-feedback">
+
+              <div *ngIf="meterId?.errors.required">
+                Meter ID is required.
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label required" for="meterType">Meter Type</label>
+          <div class="col-md-9">
+            <select name="meterType" id="meterType" class="form-control"
+                    [class.is-invalid]="meterType?.touched && meterType.invalid"
+                    required
+                    [(ngModel)]="consumerMeterToProcess.type" #meterType="ngModel">
+              <option [value]="null" disabled>Please select a Type</option>
+              <option *ngFor="let option of consumerMeterTypeOptions | toArray" [value]="option.key">{{ option.value }}</option>
+            </select>
+
+            <div *ngIf="meterType?.touched && meterType.invalid" class="invalid-feedback">
+
+              <div *ngIf="meterType?.errors.required">
+                Meter Type is required.
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-md mr-auto" (click)="modal.hide()">Back</button>
+        <button type="button" class="btn btn-md btn-primary"
+                [ngClass]="['btn btn-md', modalAction === 'create' ? 'btn-success' : 'btn-primary']"
+                (click)="onConsumerMeterSubmit()">
+          <span class="font-weigh-bold">{{ modalAction === 'create' ? 'Add' : 'Save' }}</span>
+        </button>
+      </div>
+    </ng-template>
+  </div>
+
+  <!--CONTRACT-->
+  <div class="contract-review card border-top border-radius">
+    <div class="card-header border-0 bg-white" (click)="tabStatus.contract = !tabStatus.contract">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': tabStatus.contract}"></i>
+      <span class="font-weight-bold h5">Contract <i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.customer || isContractSectionLoading"></i></span>
+      <div class="d-inline-block color-green ml-5" *ngIf="currentContract && tabStatus.contract && visibleTab.contract && !isContractSectionLoading">
+        <i class="fas fa-circle"></i>
+        <span class="text-success">{{ currentContract?.statusDisplay }}</span>
+      </div>
+      <div class="d-inline-block text-orange ml-5" *ngIf="currentContract && currentContract?.dunningProcess?.dunningStatus && tabStatus.contract && visibleTab.contract && !isContractSectionLoading">
+        <i class="fas fa-circle"></i>
+        <span>In Dunning</span>
+      </div>
+
+      <div class="float-right" *ngIf="currentContract && tabStatus.contract && visibleTab.contract && !isContractSectionLoading">
+        <a class="btn btn-md btn-secondary" href="javascript:void(0)" *ngIf="hasBackHistory" (click)="goBack()"><i class="fa fa-chevron-circle-left"></i> Back</a>
+        <ng-container *ngIf="!is('new')">
+          <button *ngIf="!isRenewaledContract && !currentContract.newContract" class="btn btn-primary"
+                  (click)="isExtendContract = false; openContractRenewalModal(); $event.stopPropagation();"
+                  [displaySpinner]="true" [loadingDisable]="pricingPlanList.length <= 0">
+            Contract Renewal
+          </button>
+          <button *ngIf="isRenewaledContract || (currentContract && currentContract.newContract)" class="btn btn-primary"
+                  (click)="$event.stopPropagation(); reviewContractRenewal();"
+                  [displaySpinner]="true" [loadingDisable]="(pricingPlanList.length <= 0) && isDoneReview">
+            Review Contract
+          </button>
+
+          <ng-container *ngIf="model.type !== CustomerType.Residential">
+            <button type="button"
+                    class="btn btn-outline-dark"
+                    (click)="initContractStatusToUpdate(ContractStatus.Submitted); modal.open(statusUpdateConfirmModal, 'md'); $event.stopPropagation();">
+              <i class="far fa-fw fa-thumbs-up"></i> Submit
+            </button>
+            <button type="button"
+                    class="btn btn-danger"
+                    *ngIf="currentContract?.status === ContractStatus.Submitted"
+                    (click)="initContractStatusToUpdate(ContractStatus.Inactive); modal.open(statusUpdateConfirmModal, 'md'); $event.stopPropagation();">
+              <i class="fas fas fa-fw fa-times"></i> Reject
+            </button>
+            <button type="button"
+                    class="btn btn-success"
+                    *ngIf="currentContract?.status === ContractStatus.Submitted"
+                    (click)="initContractStatusToUpdate(ContractStatus.Active); modal.open(statusUpdateConfirmModal, 'md'); $event.stopPropagation();">
+              <i class="fas fa-fw fa-check"></i> Approve
+            </button>
+          </ng-container>
+          <button type="button" class="btn btn-primary"
+                  [loadingDisable]="loadingDataTabs.contract" [displaySpinner]="true"
+                  (click)="onUpdateDunningProcessStatus('activate'); $event.stopPropagation();"
+                  *ngIf="!currentContract?.dunningProcess?.dunningStatus">
+            <i class="fas fa-plus-circle"></i> Activate Dunning
+          </button>
+          <button type="button" class="btn btn-primary"
+                  [loadingDisable]="loadingDataTabs.contract" [displaySpinner]="true"
+                  (click)="onUpdateDunningProcessStatus('deactivate'); $event.stopPropagation();"
+                  *ngIf="currentContract?.dunningProcess?.dunningStatus">
+            <i class="fas fa-minus-circle"></i> Deactivate Dunning
+          </button>
+          <!--<button type="button" class="btn bg-white border-danger" *ngIf="currentContract?.status === ContractStatus.Active"-->
+                  <!--(click)="initContractStatusToUpdate(ContractStatus.Deactivated); modal.open(statusUpdateConfirmModal, 'md'); $event.stopPropagation();">-->
+            <!--Deactivate-->
+          <!--</button>-->
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="card-body text-center pt-0" *ngIf="(tabStatus.contract && !currentContract) || (tabStatus.contract && !visibleTab.contract && !isContractSectionLoading)">No Contract Found</div>
+
+    <div *ngIf="currentContract && tabStatus.contract && visibleTab.contract && !isContractSectionLoading">
+      <div class="card-body">
+        <label class="font-weight-bold">
+          <u class="underline">Price Plan</u>
+        </label>
+
+        <div class="row justify-content-between m-0 pt-2">
+
+          <div class="col-md-5 p-0">
+            <admin-custom-field-input [currentValue]="currentPricingPlan?.name"
+                                      fieldName="Pricing Plan">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                      [currentValue]="currentContract?.pricingMarker"
+                                      fieldName="Pricing Marker"
+                                      modelFieldName="pricingMarker"
+                                      [isUpdating]="fieldMapUpdating['pricingMarker']"
+                                      [isInputting]="fieldMapInput['pricingMarker']"
+                                      (edit)="editFieldByCustomFieldInput('pricingMarker')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Number"
+                                      [currentValue]="currentContract?.signUpRate"
+                                      fieldName="Signup Rate"
+                                      modelFieldName="signUpRate"
+                                      [isUpdating]="fieldMapUpdating['signUpRate']"
+                                      [isInputting]="fieldMapInput['signUpRate']"
+                                      (edit)="editFieldByCustomFieldInput('signUpRate')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+        </div>
+
+        <div class="row m-0 justify-content-between pt-2">
+          <div class="col-md-5 custom-field">
+            <label class="m-0 p-0 font-weight-bold">Current Rate:&nbsp;</label>
+
+            <span *ngIf="currentContract?.contractTypeDisplay?.toLowerCase() === ContractType.Dot">
+              <ng-container *ngFor="let rate of currentPricingPlan?.promotionTemplate; let last = last">
+                <ng-container>{{ (rate?.percentDiscount | percentage) }}</ng-container>
+                <ng-container *ngIf="!last"> / </ng-container>
+                <ng-container *ngIf="last"> DOT </ng-container>
+              </ng-container>
+              <ng-container *ngFor="let promotion of currentPricingPlan?.promotionTemplate; let first = first; let last = last">
+                <ng-container *ngIf="first && !last"> (first </ng-container>
+                <ng-container *ngIf="!first"> / next </ng-container>
+                <ng-container *ngIf="!(first && last)"> {{ promotion.defaultPeriodApplied }} mths</ng-container>
+                <ng-container *ngIf="!first && last">)</ng-container>
+              </ng-container>
+            </span>
+
+            <span *ngIf="currentContract?.contractTypeDisplay?.toLowerCase() !== ContractType.Dot">
+              <ng-container *ngFor="let rate of currentPricingPlan?.promotionTemplate; let first = first; let last = last">
+                <ng-container>
+                  <ng-container *ngIf="!first">, </ng-container>
+                  {{(rate?.rateExcludingTax * 100).toFixed(2)}}
+                </ng-container>
+                <ng-container *ngIf="!last"> / </ng-container>
+                <ng-container *ngIf="last"> cents/kWh FIXED </ng-container>
+              </ng-container>
+              <ng-container *ngFor="let promotion of currentPricingPlan?.promotionTemplate; let first = first; let last = last">
+                <ng-container *ngIf="first && !last"> (first </ng-container>
+                <ng-container *ngIf="!first"> / next </ng-container>
+                <ng-container *ngIf="!(first && last)"> {{ promotion.defaultPeriodApplied }} mths </ng-container>
+                <ng-container *ngIf="!first && last">) - Excluding GST</ng-container>
+                <ng-container *ngIf="first && last">- Excluding GST</ng-container>
+              </ng-container>
+            </span><br/>
+
+            <!--<span *ngIf="currentContract?.contractType !== ContractType.Dot">-->
+              <!--<ng-container *ngFor="let rate of currentPricingPlan?.promotionTemplate; let last = last">-->
+                <!--<ng-container>, {{(rate?.rate * 100).toFixed(2) }}</ng-container>-->
+                <!--<ng-container *ngIf="!last"> / </ng-container>-->
+                <!--<ng-container *ngIf="last"> cents/kWh FIXED </ng-container>-->
+              <!--</ng-container>-->
+              <!--<ng-container *ngFor="let promotion of currentPricingPlan?.promotionTemplate; let first = first; let last = last">-->
+                <!--<ng-container *ngIf="first && !last"> (first </ng-container>-->
+                <!--<ng-container *ngIf="!first"> / next </ng-container>-->
+                <!--<ng-container *ngIf="!(first && last)"> {{ promotion.defaultPeriodApplied }} mths </ng-container>-->
+                <!--<ng-container *ngIf="!first && last">) - Including GST</ng-container>-->
+                <!--<ng-container *ngIf="first && last">- Including GST</ng-container>-->
+              <!--</ng-container>-->
+            <!--</span>-->
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [currentValue]="currentContract?.discountPercentage | percentage"
+                                      fieldName="Discount">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [currentValue]="currentContract?.cleanEnergyPercentage"
+                                      fieldName="Clean Energy (%)">
+            </admin-custom-field-input>
+          </div>
+
+        </div>
+
+        <div class="row m-0 justify-content-between pt-2">
+          <div class="col-md-5 p-0">
+            <admin-custom-field-input [currentValue]="currentContract?.offPeakRate | percentage"
+                                      fieldName="Off Peak Rate">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 custom-field">
+          </div>
+
+          <div class="col-md-3 custom-field">
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <label class="font-weight-bold">
+          <u class="underline">Contract Details</u>
+        </label>
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-5 p-0">
+            <admin-custom-field-input [currentValue]="currentContract?.contractRef"
+                                      fieldName="Contract Ref">
+            </admin-custom-field-input>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-3 custom-field">
+            <label class="m-0 p-0 font-weight-bold" for="signedDate">Signed Date&nbsp;</label>
+            <div *ngIf="!fieldMapInput['signedDate']" class="flex-1">
+              <div [ngClass]="{ 'border border-danger rounded': signedDate.invalid }"
+                   data-toggle="popover"
+                   [title]="(signedDate.invalid && signedDate?.errors?.required) ? 'Signed Date is required.' : ''">
+              {{ currentContract?.signedDate.short }}&nbsp;
+              </div>
+            </div>
+            <input id="signedDate" name="signedDate" placeholder="Contract Signed Date"
+                   [ngClass]="{ 'd-none': !fieldMapInput['signedDate'], 'border-radius-25': fieldMapInput['signedDate'] }"
+                   required
+                   bsDatepicker [bsConfig]="adminConfig?.bootstrap?.datePicker"
+                   (ngModelChange)="currentContract?.commissionedDate.setEmpty();
+                                    currentContract?.plannedEndDate.setEmpty();
+                                    currentContract?.actualEndDate.setEmpty()"
+                   [(ngModel)]="currentContract.signedDate.short" #signedDate="ngModel" #signedDateElement>
+            <i *ngIf="fieldMapUpdating['signedDate']" class="fa fa-spinner fa-spin p-2"></i>
+            <button *ngIf="fieldMapInput['signedDate'] && !fieldMapUpdating['signedDate']"
+                    (mousedown)="cancelUpdateField(ResourceModel.Contract, 'signedDate', signedDateElement);"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-times p-1"></i>
+            </button>
+            <button *ngIf="fieldMapInput['signedDate'] && !fieldMapUpdating['signedDate'] && !signedDate.invalid && !signedDate?.errors?.required"
+                    (mousedown)="updateContract('signedDate', signedDateElement); $event.preventDefault()"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-check p-1"></i>
+            </button>
+            <button *ngIf="!fieldMapInput['signedDate'] && !fieldMapUpdating['signedDate']" class="action-button bg-white border-0"
+                    (mousedown)="fieldMapInput['signedDate'] = true; editField(ResourceModel.Contract, 'signedDate', signedDateElement); signedDateElement.focus()">
+              <i class="fas fa-pencil-alt p-1"></i>
+            </button>
+            <div *ngIf="fieldMapInput['signedDate'] && signedDate.invalid && signedDate?.errors?.required" class="field-error-message">
+              <alert type="error">
+                <span class="text-white">Signed Date is required.</span>
+                <div class="form-error-arrow">
+                  <div class="form-error-arrow-inner"></div>
+                </div>
+              </alert>
+            </div>
+          </div>
+
+          <div class="col-md-3 custom-field">
+            <label class="m-0 p-0 font-weight-bold" for="expected-start-date">Expected Start Date&nbsp;</label>
+            <span *ngIf="!fieldMapInput['expectedStartDate']" class="flex-1">
+              {{ currentContract?.expectedStartDate.short }}
+            </span>
+            <input id="expected-start-date" name="expected-start-date" placeholder="Contract Expected Start Date"
+                   [ngClass]="{ 'd-none': !fieldMapInput['expectedStartDate'], 'border-radius-25': fieldMapInput['expectedStartDate'] }"
+                   bsDatepicker [minDate]="currentContract?.commissionedDate.moment?.toDate()" [bsConfig]="adminConfig?.bootstrap?.datePicker"
+                   [(ngModel)]="currentContract.expectedStartDate.short" #expectedStartDate="ngModel" #expectedStartDateElement>
+            <i *ngIf="fieldMapUpdating['expectedStartDate']" class="fa fa-spinner fa-spin p-2"></i>
+            <button *ngIf="fieldMapInput['expectedStartDate'] && !fieldMapUpdating['expectedStartDate']"
+                    (mousedown)="cancelUpdateField(ResourceModel.Contract, 'expectedStartDate', expectedStartDateElement);"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-times p-1"></i>
+            </button>
+            <button *ngIf="fieldMapInput['expectedStartDate'] && !fieldMapUpdating['expectedStartDate']"
+                    (mousedown)="updateContract('expectedStartDate', expectedStartDateElement); $event.preventDefault()"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-check p-1"></i>
+            </button>
+            <button *ngIf="!fieldMapInput['expectedStartDate'] && !fieldMapUpdating['expectedStartDate']" class="action-button bg-white border-0"
+                    (mousedown)="fieldMapInput['expectedStartDate'] = true;
+                    editField(ResourceModel.Contract, 'expectedStartDate', expectedStartDateElement);
+                    expectedStartDateElement.focus()">
+              <i class="fas fa-pencil-alt p-1"></i>
+            </button>
+          </div>
+
+          <div class="col-md-3 custom-field">
+            <label class="m-0 p-0 font-weight-bold" for="plannedEndDate">Term End Date&nbsp;</label>
+            <span *ngIf="!fieldMapInput['plannedEndDate']" class="flex-1">
+              {{ currentContract?.plannedEndDate.short }}&nbsp;
+            </span>
+            <input id="plannedEndDate" name="plannedEndDate" placeholder="Contract Term End Date"
+                   [ngClass]="{ 'd-none': !fieldMapInput['plannedEndDate'], 'border-radius-25 bg-white': fieldMapInput['plannedEndDate'] }"
+                   bsDatepicker [minDate]="currentContract?.commissionedDate.moment?.toDate()" [bsConfig]="adminConfig?.bootstrap?.datePicker"
+                   [(ngModel)]="currentContract.plannedEndDate.short" #plannedEndDate="ngModel" #plannedEndDateElement>
+            <i *ngIf="fieldMapUpdating['plannedEndDate']" class="fa fa-spinner fa-spin p-2"></i>
+            <button *ngIf="fieldMapInput['plannedEndDate'] && !fieldMapUpdating['plannedEndDate']"
+                    (mousedown)="cancelUpdateField(ResourceModel.Contract, 'plannedEndDate', plannedEndDateElement);"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-times p-1"></i>
+            </button>
+            <button *ngIf="fieldMapInput['plannedEndDate'] && !fieldMapUpdating['plannedEndDate']"
+                    (mousedown)="updateContract('plannedEndDate', plannedEndDateElement); $event.preventDefault()"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-check p-1"></i>
+            </button>
+            <button *ngIf="!fieldMapInput['plannedEndDate'] && !fieldMapUpdating['plannedEndDate'] && !currentContract?.commissionedDate.isEmpty()"
+                    class="action-button bg-white border-0"
+                    (mousedown)="fieldMapInput['plannedEndDate'] = true;
+                    editField(ResourceModel.Contract, 'plannedEndDate', plannedEndDateElement); plannedEndDateElement.focus()">
+              <i class="fas fa-pencil-alt p-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-3 custom-field">
+            <label class="m-0 p-0 font-weight-bold" for="order-date">Order Date&nbsp;</label>
+            <span *ngIf="!fieldMapInput['orderDate']" class="flex-1">
+              {{ currentContract?.orderDate.short }}
+            </span>
+            <input id="order-date" name="order-date" placeholder="Contract Order Date"
+                   [ngClass]="{ 'd-none': !fieldMapInput['orderDate'], 'border-radius-25': fieldMapInput['orderDate'] }"
+                   bsDatepicker [minDate]="currentContract?.signedDate.moment?.toDate()" [bsConfig]="adminConfig?.bootstrap?.datePicker"
+                   [(ngModel)]="currentContract.orderDate.short" #orderDate="ngModel" #orderDateElement>
+            <i *ngIf="fieldMapUpdating['orderDate']" class="fa fa-spinner fa-spin p-2"></i>
+            <button *ngIf="fieldMapInput['orderDate'] && !fieldMapUpdating['orderDate']" (mousedown)="cancelUpdateField(ResourceModel.Contract, 'orderDate', orderDateElement);"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-times p-1"></i>
+            </button>
+            <button *ngIf="fieldMapInput['orderDate'] && !fieldMapUpdating['orderDate']" (mousedown)="updateContract('orderDate', orderDateElement); $event.preventDefault()"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-check p-1"></i>
+            </button>
+            <button *ngIf="!fieldMapInput['orderDate'] && !fieldMapUpdating['orderDate']" class="action-button bg-white border-0"
+                    (mousedown)="fieldMapInput['orderDate'] = true;
+                  editField(ResourceModel.Contract, 'orderDate', orderDateElement);
+                  orderDateElement.focus()">
+              <i class="fas fa-pencil-alt p-1"></i>
+            </button>
+          </div>
+
+          <div class="col-md-3 custom-field">
+            <label class="m-0 p-0 font-weight-bold" for="commissionedDate">Commissioned Date&nbsp;</label>
+            <div *ngIf="!fieldMapInput['commissionedDate']" class="flex-1">
+              <div [ngClass]="{ 'border border-danger rounded': commissionedDate.invalid }"
+                   data-toggle="popover" [title]="(commissionedDate.invalid && commissionedDate?.errors?.required) ? 'Commissioned Date is required.' : ''">
+                {{ currentContract?.commissionedDate.short }}&nbsp;
+              </div>
+            </div>
+            <input id="commissionedDate" name="commissionedDate"
+                   [ngClass]="{ 'd-none': !fieldMapInput['commissionedDate'], 'border-radius-25': fieldMapInput['commissionedDate'] }"
+                   placeholder="Contract Commissioned Date"
+                   [disabled]="currentContract?.signedDate.isEmpty()"
+                   bsDatepicker [minDate]="currentContract?.signedDate.moment?.toDate()"
+                   [bsConfig]="adminConfig?.bootstrap?.datePicker"
+                   [(ngModel)]="currentContract.commissionedDate.short"
+                   (ngModelChange)="currentContract?.plannedEndDate.setEmpty();currentContract?.actualEndDate.setEmpty()"
+                   required #commissionedDate="ngModel" #commissionedDateElement>
+            <i *ngIf="fieldMapUpdating['commissionedDate']" class="fa fa-spinner fa-spin p-2"></i>
+            <button *ngIf="fieldMapInput['commissionedDate'] && !fieldMapUpdating['commissionedDate']"
+                    (mousedown)="cancelUpdateField(ResourceModel.Contract, 'commissionedDate', commissionedDateElement);"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-times p-1"></i>
+            </button>
+            <button *ngIf="fieldMapInput['commissionedDate'] && !fieldMapUpdating['commissionedDate'] && !commissionedDate.invalid && !commissionedDate?.errors?.required"
+                    (mousedown)="updateContract('commissionedDate', commissionedDateElement); $event.preventDefault()"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-check p-1"></i>
+            </button>
+            <button *ngIf="!fieldMapInput['commissionedDate'] && !fieldMapUpdating['commissionedDate']" class="action-button bg-white border-0"
+                    (mousedown)="editField(ResourceModel.Contract, 'commissionedDate', commissionedDateElement);">
+              <i class="fas fa-pencil-alt p-1"></i>
+            </button>
+
+            <div *ngIf="commissionedDate.invalid && commissionedDate?.errors?.required" class="field-error-message">
+              <alert type="error">
+                <span class="text-white">Commissioned Date is required.</span>
+                <div class="form-error-arrow">
+                  <div class="form-error-arrow-inner"></div>
+                </div>
+              </alert>
+            </div>
+          </div>
+
+          <div class="col-md-3 custom-field">
+            <label class="m-0 p-0 font-weight-bold" for="commissionedDate">Actual End Date&nbsp;</label>
+            <span *ngIf="!fieldMapInput['actualEndDate']" class="flex-1">
+              {{ currentContract?.actualEndDate.short }}
+            </span>
+            <input id="actualEndDate" name="actualEndDate" placeholder="Contract Actual End Date"
+                   [ngClass]="{ 'd-none': !fieldMapInput['actualEndDate'], 'border-radius-25': fieldMapInput['actualEndDate'] }"
+                   bsDatepicker [minDate]="currentContract?.commissionedDate.moment?.toDate()" [bsConfig]="adminConfig?.bootstrap?.datePicker"
+                   [(ngModel)]="currentContract.actualEndDate.short" #actualEndDate="ngModel" #actualEndDateElement>
+            <i *ngIf="fieldMapUpdating['actualEndDate']" class="fa fa-spinner fa-spin p-2"></i>
+            <button *ngIf="fieldMapInput['actualEndDate'] && !fieldMapUpdating['actualEndDate']"
+                    (mousedown)="cancelUpdateField(ResourceModel.Contract, 'actualEndDate', actualEndDateElement);"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-times p-1"></i>
+            </button>
+            <button *ngIf="fieldMapInput['actualEndDate'] && !fieldMapUpdating['actualEndDate']"
+                    (mousedown)="updateContract('actualEndDate', actualEndDateElement); $event.preventDefault()"
+                    class="action-button bg-white border-0">
+              <i class="fas fa-check p-1"></i>
+            </button>
+            <button *ngIf="!fieldMapInput['actualEndDate'] && !fieldMapUpdating['actualEndDate'] && !currentContract?.commissionedDate.isEmpty()"
+                    class="action-button bg-white border-0"
+                    (mousedown)="editField(ResourceModel.Contract, 'actualEndDate', actualEndDateElement);">
+              <i class="fas fa-pencil-alt p-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Number"
+                                      [currentValue]="currentContract?.termNumber"
+                                      fieldName="Contract Term"
+                                      modelFieldName="termNumber"
+                                      [isUpdating]="fieldMapUpdating['termNumber']"
+                                      [isRequired]="true"
+                                      [isInputting]="fieldMapInput['termNumber']"
+                                      (edit)="editFieldByCustomFieldInput('termNumber')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Dropdown"
+                                      [currentValue]="currentContract?.saleTeam?.id"
+                                      [currentValueDisplay]="currentContract?.saleTeam?.name"
+                                      fieldName="Sale Team"
+                                      modelFieldName="saleId"
+                                      [isUpdating]="fieldMapUpdating['saleId']"
+                                      [isRequired]="true"
+                                      [listOptions]="saleTeamList"
+                                      [isInputting]="fieldMapInput['saleId']"
+                                      (edit)="editFieldByCustomFieldInput('saleId')"
+                                      (changeSelectById)="selectById($event.value, 'currentContract?.saleId', 'saleTeamList')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [currentValue]="currentContract?.contractTypeDisplay"
+                                      fieldName="Contract Type">
+            </admin-custom-field-input>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Dropdown"
+                                      [currentValue]="currentContract?.contractOrigin"
+                                      [currentValueDisplay]="currentContract?.contractOriginDisplay"
+                                      fieldName="Contract Origin"
+                                      modelFieldName="contractOrigin"
+                                      [isUpdating]="fieldMapUpdating['contractOrigin']"
+                                      [isRequired]="true"
+                                      [listOptions]="contractOriginOptions"
+                                      [isInputting]="fieldMapInput['contractOrigin']"
+                                      (edit)="editFieldByCustomFieldInput('contractOrigin')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <ng-container *ngIf="model.type !== CustomerType.Residential">
+            <div class="col-md-3 p-0">
+              <admin-custom-field-input [inputType]="InputFieldType.Number"
+                                        [currentValue]="currentContract?.capacity"
+                                        fieldName="Capacity (KW)"
+                                        modelFieldName="capacity"
+                                        [isUpdating]="fieldMapUpdating['capacity']"
+                                        [isInputting]="fieldMapInput['capacity']"
+                                        (edit)="editFieldByCustomFieldInput('capacity')"
+                                        (update)="updateContractByCustomFieldInput($event)">
+              </admin-custom-field-input>
+            </div>
+
+            <div class="col-md-3 p-0">
+              <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                        [currentValue]="currentContract?.legacyContract"
+                                        fieldName="Contract Legacy"
+                                        modelFieldName="legacyContract"
+                                        [isUpdating]="fieldMapUpdating['legacyContract']"
+                                        [isInputting]="fieldMapInput['legacyContract']"
+                                        (edit)="editFieldByCustomFieldInput('legacyContract')"
+                                        (update)="updateContractByCustomFieldInput($event)">
+              </admin-custom-field-input>
+            </div>
+          </ng-container>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2" *ngIf="model.type !== CustomerType.Residential">
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                      [currentValue]="currentContract?.fromRetailer"
+                                      fieldName="From Retailer"
+                                      modelFieldName="fromRetailer"
+                                      [isUpdating]="fieldMapUpdating['fromRetailer']"
+                                      [isInputting]="fieldMapInput['fromRetailer']"
+                                      (edit)="editFieldByCustomFieldInput('fromRetailer')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                      [currentValue]="currentContract?.toRetailer"
+                                      fieldName="To Retailer"
+                                      modelFieldName="toRetailer"
+                                      [isUpdating]="fieldMapUpdating['toRetailer']"
+                                      [isInputting]="fieldMapInput['toRetailer']"
+                                      (edit)="editFieldByCustomFieldInput('toRetailer')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-4">
+          <div class="col-md-3 p-0">
+            <admin-custom-toggle (update)="updateContract('isAfpIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="AFP Included"
+                                 modelFieldName="isAfpIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isAfpIncluded">
+            </admin-custom-toggle>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-toggle (update)="updateContract('isEmcIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="EMC Included"
+                                 modelFieldName="isEmcIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isEmcIncluded">
+            </admin-custom-toggle>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-toggle (update)="updateContract('isMssIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="MSS Included"
+                                 modelFieldName="isMssIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isMssIncluded">
+            </admin-custom-toggle>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-3 p-0">
+            <admin-custom-toggle (update)="updateContract('isHeucIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="HEUC Included"
+                                 modelFieldName="isHeucIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isHeucIncluded">
+            </admin-custom-toggle>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-toggle (update)="updateContract('isMeucIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="MEUC Included"
+                                 modelFieldName="isMeucIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isMeucIncluded">
+            </admin-custom-toggle>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-toggle (update)="updateContract('isMssMdscIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="MSS_MDSC Included"
+                                 modelFieldName="isMssMdscIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isMssMdscIncluded">
+            </admin-custom-toggle>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-3 p-0">
+            <admin-custom-toggle (update)="updateContract('isUosIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="UOS Included"
+                                 modelFieldName="isUosIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isUosIncluded">
+            </admin-custom-toggle>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-toggle (update)="updateContract('isPsoIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="PSO Included"
+                                 modelFieldName="isPsoIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isPsoIncluded">
+            </admin-custom-toggle>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-toggle (update)="updateContract('isMssOthersIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="MSS_Others Included"
+                                 modelFieldName="isMssOthersIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isMssOthersIncluded">
+            </admin-custom-toggle>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <label class="font-weight-bold">
+          <u class="underline">Billing Details</u>
+        </label>
+
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-5 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                      [currentValue]="currentContract?.billingAddress"
+                                      fieldName="Billing Address"
+                                      modelFieldName="billingAddress"
+                                      [isUpdating]="fieldMapUpdating['billingAddress']"
+                                      [isRequired]="true"
+                                      [isInputting]="fieldMapInput['billingAddress']"
+                                      (edit)="editFieldByCustomFieldInput('billingAddress')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                      [currentValue]="currentContract?.billingPostalCode"
+                                      fieldName="Billing Postal Code"
+                                      modelFieldName="billingPostalCode"
+                                      [isUpdating]="fieldMapUpdating['billingPostalCode']"
+                                      [isRequired]="true"
+                                      maxlength="8"
+                                      [pattern]="adminConfig?.validation.integer"
+                                      [isInputting]="fieldMapInput['billingPostalCode']"
+                                      (edit)="editFieldByCustomFieldInput('billingPostalCode')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 custom-field">
+            <label class="m-0 p-0 font-weight-bold">Billing Cycle&nbsp;</label>
+            <span class="flex-1">
+              {{ currentContract?.billingPeriod?.billingOption }}
+            </span>
+            <button class="action-button bg-white border-0"
+                    (mousedown)="initBillingOption('update'); modal.open(billingOptionModal , 'lg')">
+              <i class="fas fa-pencil-alt p-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-5 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Number"
+                                      [currentValue]="currentContract?.latePaymentRate"
+                                      fieldName="Late Payment Rate"
+                                      modelFieldName="latePaymentRate"
+                                      [isUpdating]="fieldMapUpdating['latePaymentRate']"
+                                      [isRequired]="true"
+                                      [isInputting]="fieldMapInput['latePaymentRate']"
+                                      (edit)="editFieldByCustomFieldInput('latePaymentRate')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                      [currentValue]="currentContract?.loadProfile"
+                                      fieldName="Load Profile"
+                                      modelFieldName="loadProfile"
+                                      [isRequired]="true"
+                                      [isUpdating]="fieldMapUpdating['loadProfile']"
+                                      [isInputting]="fieldMapInput['loadProfile']"
+                                      (edit)="editFieldByCustomFieldInput('loadProfile')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                      [currentValue]="currentContract?.paymentTermNumber"
+                                      fieldName="Payment Term"
+                                      modelFieldName="paymentTermNumber"
+                                      [isRequired]="true"
+                                      [isUpdating]="fieldMapUpdating['paymentTermNumber']"
+                                      [isInputting]="fieldMapInput['paymentTermNumber']"
+                                      (edit)="editFieldByCustomFieldInput('paymentTermNumber')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2">
+          <div class="col-md-5 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.TextArea"
+                                      [currentValue]="currentContract?.specialRequest"
+                                      fieldName="Special Request"
+                                      modelFieldName="specialRequest"
+                                      [isUpdating]="fieldMapUpdating['specialRequest']"
+                                      [isInputting]="fieldMapInput['specialRequest']"
+                                      (edit)="editFieldByCustomFieldInput('specialRequest')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input [inputType]="InputFieldType.Text"
+                                      [currentValue]="currentContract?.depositAmount || '0.00'"
+                                      fieldName="Deposit Amount"
+                                      modelFieldName="depositAmount"
+                                      [isUpdating]="fieldMapUpdating['depositAmount']"
+                                      [isRequired]="true"
+                                      [isInputting]="fieldMapInput['depositAmount']"
+                                      (edit)="editFieldByCustomFieldInput('depositAmount')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0" *ngIf="model.type === CustomerType.Residential">
+            <admin-custom-toggle (update)="updateContract('isTlfIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="TLF Included"
+                                 modelFieldName="isTlfIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isTlfIncluded">
+            </admin-custom-toggle>
+          </div>
+
+          <div class="col-md-3 p-0" *ngIf="model.type !== CustomerType.Residential">
+            <admin-custom-field-input [inputType]="InputFieldType.Number"
+                                      [currentValue]="currentContract?.threeMonthAverageConsumption"
+                                      fieldName="Original Load Profile"
+                                      modelFieldName="threeMonthAverageConsumption"
+                                      [isUpdating]="fieldMapUpdating['threeMonthAverageConsumption']"
+                                      [isRequired]="true"
+                                      [isInputting]="fieldMapInput['threeMonthAverageConsumption']"
+                                      (edit)="editFieldByCustomFieldInput('threeMonthAverageConsumption')"
+                                      (update)="updateContractByCustomFieldInput($event)">
+            </admin-custom-field-input>
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2" *ngIf="model.type !== CustomerType.Residential">
+          <div class="col-md-5 p-0">
+            <admin-custom-field-input *ngIf="currentContract?.dunningProcess?.dunningStatus"
+                                      fieldName="Start Date"
+                                      [currentValue]="currentContract?.dunningProcess?.startDate?.short">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0" *ngIf="model.type === CustomerType.Residential">
+            <admin-custom-toggle (update)="updateContract('isTlfIncluded', null, $event)"
+                                 (changeToggle)="changeToggleContract($event)"
+                                 fieldName="TLF Included"
+                                 modelFieldName="isTlfIncluded"
+                                 [clickedModelFieldName]="clickedModelFieldName"
+                                 [currentValue]="currentContract?.isTlfIncluded">
+            </admin-custom-toggle>
+          </div>
+
+          <div class="col-md-3 p-0">
+          </div>
+        </div>
+
+        <div class="row justify-content-between m-0 pt-2" *ngIf="currentContract?.dunningProcess?.dunningStatus">
+          <div class="col-md-5 p-0">
+            <admin-custom-field-input fieldName="Next Remind Date"
+                                      [currentValue]="currentContract?.dunningProcess?.nextRemindDate?.short">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input fieldName="Action On Current Step"
+                                      [currentValue]="currentContract?.dunningProcess?.actionOnStep">
+            </admin-custom-field-input>
+          </div>
+
+          <div class="col-md-3 p-0">
+            <admin-custom-field-input fieldName="Creation Date"
+                                      [currentValue]="currentContract?.dunningProcess?.createdTime?.short">
+            </admin-custom-field-input>
+          </div>
+        </div>
+
+        <div class="d-inline-block w-100 pt-4">
+          <div class="offset-6 col-6 p-0 text-right">
+            <span class="col-3 field-display-time">Created time {{ currentContract?.createdTime.short }}</span>
+            <span class="col-3 field-display-time">Last Update time {{ currentContract?.updatedTime.short }}</span>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="card-body" *ngIf="!is('new')">
+        <div class="position-relative">
+          <label class="font-weight-bold">
+            <u class="underline">Promotions</u>
+          </label>
+          <div class="btn-table-top-right">
+            <button type="button" class="btn btn-sm btn-success"
+                    [loadingDisable]="loadingDataTabs.promotion" [displaySpinner]="true"
+                    (click)="initPromotion(); modal.open(promotionForm, 'md')">
+              Create Promotion
+            </button>
+          </div>
+          <data-table id="promotionTable"
+                      [items]="promotions" [itemCount]="promotionsMeta.count"
+                      [page]="promotionsMeta.page"
+                      [limit]="promotionPagination.limit"
+                      [sortBy]="promotionPagination.sortBy" [sortAsc]="promotionPagination.sortAsc"
+                      [showReloading]="true"
+                      [isRefreshable]="true" [isColumnsSelectable]="true" [substituteRows]="false"
+                      [indexColumnHeader]="'#'" [minHeight]="false"
+                      (reload)="reloadPromotions($event)">
+            <data-table-column [property]="'planRateType'" header="Type"></data-table-column>
+            <data-table-column [property]="'issuedDate.short'" header="Issued Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'planRateValue'" [sortable]="true"
+                               [header]="(currentContract.contractType === ContractType.Fix) ? 'Fixed Price Discount' : 'Discount (%)'">
+              <ng-template #dataTableCell let-item="item">
+                {{ (currentContract.contractType === ContractType.Fix) ? item?.planRateValue : (item?.planRateValue | percentage) }}
+              </ng-template>
+            </data-table-column>
+            <data-table-column [property]="'applyingPeriods'" header="Applying Periods" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'actualUsedDate.short'" header="Start Used Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'expiredDate.short'" header="Expired Date" [sortable]="true"></data-table-column>
+          </data-table>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="position-relative">
+          <label class="font-weight-bold">
+            <u class="underline">Expired Contract List</u>
+          </label>
+          <div class="btn-table-top-right">
+          </div>
+          <data-table id="expiredContractTable"
+                      [items]="expiredContract" [itemCount]="expiredContractMeta.count"
+                      [page]="expiredContractMeta.page"
+                      [limit]="expiredContractPagination.limit"
+                      [showReloading]="loadingDataTabs.expiredContract"
+                      [isRefreshable]="true" [isColumnsSelectable]="true" [substituteRows]="false"
+                      [indexColumnHeader]="'#'" [minHeight]="false"
+                      (reload)="reloadExpiredContract($event)">
+            <data-table-column [property]="'contractRef'" header="Contract Ref"></data-table-column>
+            <data-table-column [property]="'signedDate.short'" header="Contract Signed Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'commissionedDate.short'" header="Contract Commissioned Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'plannedEndDate.short'" header="Contract Term End Date" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'pricingPlanName'" header="Pricing Name" [sortable]="true"></data-table-column>
+            <data-table-column [property]="'billingOption'" header="Billing Period" [sortable]="true"></data-table-column>
+            <data-table-column header="Actions">
+              <ng-template #dataTableHeader let-item="item">
+                <div class="d-flex">
+                  <i>Actions</i>
+                </div>
+              </ng-template>
+              <ng-template #dataTableCell let-item="item">
+                <a class="btn btn-primary btn-sm text-white" title="View" [routerLink]="['/admin/management/contracts', item.id, 'detail']" [queryParams]="getHistoryParams()"><i class="fas fa-eye"></i></a>
+              </ng-template>
+            </data-table-column>
+          </data-table>
+        </div>
+      </div>
+
+    </div>
+
+    <ng-template #statusUpdateConfirmModal>
+      <div class="modal-header">
+        <h4 class="modal-title text-center">
+          {{ { 'submitted': 'Submit', 'deactivated': 'Deactivate', 'inactive': 'Reject', 'active': 'Approve' } | switch: modalContractStatus }} contract
+        </h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you wish to
+          {{ { 'submitted': 'submit', 'deactivated': 'deactivate', 'inactive': 'reject', 'active': 'approve' } | switch: modalContractStatus }}
+          contract with id: {{ model.id }} ?</p>
+      </div>
+      <div class="modal-body">
+        <form action="" method="post" class="form-horizontal" #modalStatusUpdateForm="ngForm">
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label" for="consumer-name">Consumer Name</label>
+            <div class="col-md-9">
+              <input id="consumer-name" name="consumer-name" [value]="currentConsumer?.name" class="form-control" disabled />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label" for="customer-name">Customer Name</label>
+            <div class="col-md-9">
+              <input id="customer-name" name="customer-name" [value]="model.name" class="form-control" disabled />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label" for="mssl-no">MSSL No</label>
+            <div class="col-md-9">
+              <input id="mssl-no" name="mssl-no" [value]="currentConsumer?.msslNo" class="form-control" disabled />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label" for="effective-date">
+              Effective Date
+            </label>
+            <div class="col-md-9">
+              <input id="effective-date" name="effective-date" class="form-control" disabled
+                     [value]="currentContract?.commissionedDate.short">
+            </div>
+          </div>
+
+          <div *ngIf="modalContractStatus === ContractStatus.Deactivated" class="form-group row">
+            <label class="col-md-3 form-control-label required" for="deactivate-reason">Reason</label>
+            <div class="col-md-9">
+              <select id="deactivate-reason" name="deactivate-reason" class="form-control"
+                      [class.is-invalid]="reasonField.touched && reasonField.invalid"
+                      required
+                      [(ngModel)]="model.reason" #reasonField="ngModel">
+                <option value="" disabled>Please select a deactivate reason</option>
+                <option *ngFor="let reason of consumerDeactivateReasons" [value]="reason">{{ reason }}</option>
+              </select>
+              <div *ngIf="reasonField.touched && reasonField.invalid" class="invalid-feedback">
+                <div *ngIf="reasonField?.errors.required">
+                  Reason is required.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="model.reason" class="form-group row">
+            <label class="col-md-3 form-control-label" for="competitor">Competitor</label>
+            <div class="col-md-9">
+              <select id="competitor" name="competitor" class="form-control"
+                      [ngModel]="selectedRetailer?.id" (change)="selectById($event.target.value, 'selectedRetailer', 'retailerList')" #competitor="ngModel">
+                <option value="null" disabled>Please select a competitor</option>
+                <option *ngFor="let retailer of retailerList" [value]="retailer.id">{{ retailer.name }}</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary mr-auto" (click)="modal.hide()">Cancel</button>
+        <button type="button" class="btn btn-danger"
+                [ngClass]="{
+                'btn-outline-dark':modalContractStatus === ContractStatus.Submitted,
+                'btn-success':modalContractStatus === ContractStatus.Active,
+                'btn-danger':modalContractStatus === ContractStatus.Deactivated,
+                'btn-warning':modalContractStatus === ContractStatus.Inactive
+               }"
+                (click)="modal.hide(); modal.open(statusUpdateNotifyModal) "
+                [disabled]="!modalStatusUpdateForm.form.valid">
+          Confirm
+        </button>
+      </div>
+    </ng-template>
+
+    <ng-template #statusUpdateNotifyModal>
+      <div class="modal-header d-none">
+        <h4 class="modal-title text-center">
+          Confirmation
+        </h4>
+      </div>
+      <div *ngIf="model.type !== CustomerType.Residential" class="modal-body">
+        <p>Before to confirm the {{ { 'submitted': 'Subscription', 'deactivated': 'Deactivation / Termination', 'inactive': 'Rejection', 'active': 'Approval' } | switch: modalContractStatus }}
+          process, please kindly note the following:</p>
+        <ul>
+          <li>This request should only come from EBT,</li>
+          <li>This action will also affect customer's contract with Starhub,</li>
+          <li>Therefore, this request will be sent to Starhub,</li>
+        </ul>
+        <p>Do you confirm the {{ { 'submitted': 'subscription', 'deactivated': 'termination', 'inactive': 'rejection', 'active': 'approval' } | switch: modalContractStatus }}?</p>
+      </div>
+      <div *ngIf="model.type === CustomerType.Residential" class="modal-body">
+        <p>Before to confirm the termination/deactivation, kindly note the following:</p>
+        <ul>
+          <li>This request should only come from EBT,</li>
+          <li>This action will also terminate customer's contract with Starhub,</li>
+          <li>Therefore, a termination request will be sent to Starhub,</li>
+        </ul>
+        <p>Do you still want to continue?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary mr-auto" (click)="modal.hide()">Cancel</button>
+        <button type="button" class="btn btn-md btn-primary"
+                [ngClass]="{
+                'btn-outline-dark':modalContractStatus === ContractStatus.Submitted,
+                'btn-success':modalContractStatus === ContractStatus.Active,
+                'btn-danger':modalContractStatus === ContractStatus.Deactivated,
+                'btn-warning':modalContractStatus === ContractStatus.Inactive
+               }"
+                (click)="onStatusUpdateConfirm()">{{ { 'submitted': 'Submit', 'deactivated': 'Deactivate', 'inactive': 'Reject', 'active': 'Approve' } | switch: modalContractStatus }}</button>
+      </div>
+    </ng-template>
+
+    <ng-template #uploadServiceAgreementModal>
+      <file-upload [resourceModel]="'contract'" [resourceId]="currentContract?.id" (uploadSuccess)="uploadServiceAgreementSuccess($event)"></file-upload>
+    </ng-template>
+
+    <ng-template #updateServiceAgreementModal>
+      <file-upload [resourceModel]="'contract'" [resourceId]="currentContract?.id" [originAssetId]="currentContract?.serviceAgreement.id" (uploadSuccess)="uploadServiceAgreementSuccess($event)"></file-upload>
+    </ng-template>
+
+    <ng-template #billingOptionModal>
+      <div class="modal-body admin-crud-form">
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label required" for="billing-option">Billing Option Tag</label>
+          <div class="col-md-10">
+            <select name="billing-option" id="billing-option" class="form-control"
+                    [class.is-invalid]="billingTag.touched && billingTag.invalid"
+                    [disabled]="modalAction === 'view'" required
+                    (change)="validateBillingOption()"
+                    [(ngModel)]="selectedBillingPeriod.billingOption" #billingTag="ngModel">
+              <option *ngIf="selectedBillingPeriod.billingBC" [value]="selectedBillingPeriod.billingBC">
+                {{ billingBcOptions[selectedBillingPeriod.billingBC].value }}
+              </option>
+              <option *ngFor="let option of billingOptions | toArray" [value]="option.key">{{ option.key }}</option>
+            </select>
+
+            <div *ngIf="billingTag.touched && billingTag.invalid" class="invalid-feedback">
+
+              <div *ngIf="billingTag?.errors.required">
+                Billing option is required.
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label" for="billing-count">Number of bills already generated</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="billing-count" disabled
+                   [value]="selectedBillingPeriod.billingCount">
+          </div>
+
+          <label class="col-md-2 form-control-label" for="billing-frequency">Frequency</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="billing-frequency" disabled
+                   [value]="selectedBillingPeriod.frequency">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label" for="billing-date">Date of Bill</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="billing-date" disabled
+                   [value]="selectedBillingPeriod.billingOptionContent?.dateOfBill">
+          </div>
+
+          <label class="col-md-2 form-control-label" for="billing-next-date">Next Billing Date</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="billing-next-date" disabled
+                   [value]="selectedBillingPeriod.nextBillingDate.short">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label" for="billing-send-from">Period Send From</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="billing-send-from" disabled
+                   [value]="selectedBillingPeriod.billingOptionContent?.periodSendFrom">
+          </div>
+
+          <label class="col-md-2 form-control-label" for="billing-send-to">Period Send To</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="billing-send-to" disabled
+                   [value]="selectedBillingPeriod.billingOptionContent?.periodSendTo">
+          </div>
+
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-2 form-control-label" for="billing-roll-over">Roll Over</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="billing-roll-over" disabled
+                   [value]="selectedBillingPeriod.rollOver">
+          </div>
+
+          <label class="col-md-2 form-control-label" for="billing-start">Last usage date billed</label>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="billing-start" disabled
+                   [value]="selectedBillingPeriod.startDate.short">
+          </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-md mr-auto" (click)="modal.hide();">Back</button>
+        <button type="button" class="btn btn-md btn-primary" *ngIf="modalAction !== 'view'"
+                (click)="updateBillingPeriod()" [disabled]="billingTag.invalid">
+          <span class="font-weigh-bold">Save</span>
+        </button>
+
+      </div>
+    </ng-template>
+
+    <ng-template #promotionForm>
+      <div class="modal-body admin-crud-form">
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label required" for="code">Promotion Code</label>
+          <div class="col-md-9">
+            <input type="text" id="code" name="code" class="form-control" placeholder="Name"
+                   [class.is-invalid]="code.touched && code.invalid"
+                   required
+                   [(ngModel)]="promotionToAction.code" #code="ngModel"/>
+            <div *ngIf="code.touched && code.invalid" class="invalid-feedback">
+
+              <div *ngIf="code?.errors.required">
+                Promotion Code is required.
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label" for="issuer">Issued By</label>
+          <div class="col-md-9">
+            <select name="issuer" id="issuer" class="form-control"
+                    [class.is-invalid]="issuer.touched && issuer.invalid"
+                    [(ngModel)]="promotionToAction.issuer" #issuer="ngModel">
+              <option [value]="null">Please select a Issuer</option>
+              <option *ngFor="let option of ISSUER_OPTIONS | toArray" [value]="option.key">{{ option.value }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label" for="issuedDate">Issued date</label>
+          <div class="col-md-9">
+            <input id="issuedDate" name="issuedDate" class="form-control" placeholder="Issued Date"
+                   [disabled]="is('detail')"
+                   bsDatepicker [minDate]="now?.moment?.toDate()" [bsConfig]="adminConfig?.bootstrap?.datePicker"
+                   [(ngModel)]="promotionToAction.issuedDate.short" #issuedDate="ngModel">
+
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label" for="issuedDate">Expiry date</label>
+          <div class="col-md-9">
+            <input id="expiredDate" name="expiredDate" class="form-control" placeholder="Expiry Date"
+                   [disabled]="is('detail')"
+                   bsDatepicker [minDate]="promotionToAction?.issuedDate?.moment?.toDate()" [bsConfig]="adminConfig?.bootstrap?.datePicker"
+                   [(ngModel)]="promotionToAction.expiredDate.short" #expiredDate="ngModel">
+
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-3 form-control-label required" for="promotionTemplate">Promotion Template</label>
+          <div class="col-md-9">
+            <div class="row">
+              <div class="col-md-9 pr-0">
+                <input name="promotionTemplate" id="promotionTemplate" class="form-control"
+                       [class.is-invalid]="!promotionToAction.promotionTemplate"
+                       required readonly
+                       [disabled]="is('detail')"
+                       [value]="promotionToAction?.promotionTemplate?.promotionName">
+
+                <div *ngIf="!promotionToAction.promotionTemplate" class="invalid-feedback">
+                  Promotion Template is required.
+                </div>
+              </div>
+              <div class="col-md-3 text-right">
+                <button type="button" class="btn btn-primary" *ngIf="!is('detail') && !promotionToAction.promotionTemplate"
+                        (click)="modal.hide(); modal.open(promotionTemplateToSelect, 'lg'); reloadPromotionTemplate(dataPromotionTable)">Add</button>
+                <button type="button" class="btn btn-primary" *ngIf="!is('detail') && promotionToAction.promotionTemplate"
+                        (click)="modal.hide(); modal.open(promotionTemplateToSelect, 'lg'); reloadPromotionTemplate(dataPromotionTable)">Change</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <b></b>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-md mr-auto" (click)="modal.hide()">Back</button>
+        <button type="button" class="btn btn-md btn-success"
+                (click)="onCreatePromotion(); modal.hide()">
+          <span class="font-weigh-bold text-white">Add</span>
+        </button>
+      </div>
+    </ng-template>
+
+    <ng-template #promotionTemplateToSelect>
+      <div class="modal-header">
+        <h5 class="modal-title">Select Promotion Template</h5>
+        <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide(); modal.open(promotionForm, 'md');">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div><!-- /modal-header-->
+      <div class="modal-body" [loadingDisplay]="isPromotionTemplateLoading">
+        <!-- Search form -->
+        <form class="form-horizontal" (ngSubmit)="reloadPromotionTemplate(getResetPromotionTemplateTableParameters())">
+          <div class="form-group row">
+            <div class="col-md-10">
+              <div class="input-group">
+                <input type="text" class="form-control" name="search" placeholder="Name"
+                       [(ngModel)]="promotionTemplateCriteriaAllInOne">
+                <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </span>
+              </div>
+            </div>
+          </div>
+        </form>
+        <data-table id="customers-table"
+                    [items]="promotionTemplateList"
+                    [itemCount]="promotionTemplateMeta.count"
+                    [page]="promotionTemplateMeta.page"
+                    [limit]="10"
+                    [sortBy]="'createdTime'" [sortAsc]="false"
+                    [indexColumnHeader]="'#'"
+                    [substituteRows]="false"
+                    [isColumnsSelectable]="true"
+                    (reload)="reloadPromotionTemplate($event)"
+                    [showReloading]="true" [minHeight]="false">
+          <data-table-column [property]="'promotionName'" [header]="'Name'" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'promotionDescription'" [header]="'Description'" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'planRateValue'" [sortable]="true"
+                             [header]="(currentContract.contractType === ContractType.Fix) ? 'Fixed Price Discount' : 'Discount (%)'">
+            <ng-template #dataTableCell let-item="item">
+              {{ (currentContract.contractType === ContractType.Fix) ? (item?.planRateValue | percentage) : (item?.planRateValue) }}
+            </ng-template>
+          </data-table-column>
+          <data-table-column [property]="'startingPeriod'" [header]="'Starting Period'" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'prefixCode'" [header]="'Prefix Code'" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'defaultPeriodApplied'" [header]="'Default Period Applied'" [visible]="false" [sortable]="true"></data-table-column>
+
+          <data-table-column header="Actions">
+            <ng-template #dataTableHeader let-item="item">
+              <i>Actions</i>
+            </ng-template>
+            <ng-template #dataTableCell let-item="item">
+              <button type="button" class="btn btn-sm text-white"
+                      [ngClass]="{
+                    'btn-primary': promotionToAction.promotionTemplate?.id !== item.id,
+                    'btn-secondary': promotionToAction.promotionTemplate?.id === item.id
+                  }"
+                      [disabled]="promotionToAction.promotionTemplate?.id === item.id"
+                      (click)="onSelectPromotionTemplate(item)">Select</button>
+            </ng-template>
+          </data-table-column>
+        </data-table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.hide(); modal.open(promotionForm, 'md')">Close</button>
+      </div>
+    </ng-template>
+
+  </div>
+
+  <!--DOCUMENTS-->
+  <div class="document-upload-review card border-top border-radius" *ngIf="visibleTab.documents">
+    <div class="card-header border-0 bg-white" (click)="tabStatus.documents = !tabStatus.documents;">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': (tabStatus.documents == true)}"></i>
+      <span class="font-weight-bold h5">Documents <i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.customer"></i></span>
+    </div>
+
+    <div class="card-body" *ngIf="tabStatus.documents && !loadingDataTabs.customer">
+      <div class="position-relative">
+        <div class="btn-table-top-right">
+          <button type="button" class="btn btn-sm btn-success"
+                  [loadingDisable]="loadingDataTabs.documents" [displaySpinner]="true"
+                  (click)="modal.open(uploadFilesModal, 'lg')">
+            <i class="fa fa-upload"></i> Upload Document
+          </button>
+        </div>
+        <data-table id="documentsTable"
+                    [items]="attachments"
+                    [itemCount]="attachmentMeta.count"
+                    [page]="attachmentMeta.page"
+                    [limit]="10"
+                    [sortBy]="'createdTime'" [sortAsc]="false"
+                    [indexColumnHeader]="'#'"
+                    [substituteRows]="false"
+                    [minHeight]="false"
+                    (reload)="reloadAttachments($event)"
+                    [showReloading]="true">
+          <data-table-column [property]="'displayName'" header="File Name" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'resourceModelDisplay'" header="Model" [sortable]="true"></data-table-column>
+          <data-table-column [property]="'createdTime.short'" header="Uploaded Date" [sortable]="true"></data-table-column>
+          <data-table-column header="Actions">
+            <ng-template #dataTableHeader let-item="item">
+              <div class="d-flex justify-content-center">
+                <i>Actions</i>
+              </div>
+            </ng-template>
+            <ng-template #dataTableCell let-item="item">
+              <div class="d-flex justify-content-center">
+                <button *ngIf="isPreviewDocumentSupport(item)" type="button" class="btn btn-primary mr-2"
+                        (click)="documentToPreview = item; modal.open(previewDocument, 'lg');">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <a *ngIf="item.filePath" class="btn btn-primary mr-2" [href]="item.fullFilePath">
+                  <i class="fas fa-download"></i>
+                </a>
+                <button *ngIf="item.filePath" type="button" class="btn btn-success mr-2"
+                        (click)="attachmentToUpdate = item; modal.open(updateAttachmentModal, 'lg');">
+                  <i class="fa fa-upload"></i>
+                </button>
+                <button *ngIf="item.filePath" type="button" class="btn btn-danger"
+                        (click)="attachmentToUpdate = item; modal.open(removeAttachmentModal, 'lg');">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </ng-template>
+          </data-table-column>
+        </data-table>
+      </div>
+    </div>
+
+    <ng-template #removeAttachmentModal>
+      <div class="modal-body">
+        <div class="form-horizontal admin-crud-form">
+          <div class="form-group row">
+            <label class="col-md-3 form-control-label" for="attachmentName">File Name</label>
+            <div class="col-md-9">
+              <input name="attachmentName" id="attachmentName" class="form-control" disabled [value]="attachmentToUpdate.displayName">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-md mr-auto" (click)="modal.hide()">Back</button>
+        <button type="button" class="btn btn-md btn-danger"
+                (click)="removeAttachment(attachmentToUpdate); modal.hide()">
+          <span class="font-weigh-bold text-white">Remove</span>
+        </button>
+      </div>
+    </ng-template>
+
+  </div>
+
+  <!--METER READING-->
+  <div class="meter-reading-review card border-top border-radius" *ngIf="visibleTab.meterReading">
+    <div class="card-header border-0 bg-white" (click)="openMeterReadingsTab();">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': (tabStatus.meterReading == true)}"></i>
+      <span class="font-weight-bold h5">Meter Reading <i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.customer || isConsumerSectionLoading"></i></span>
+    </div>
+    <div class="card-body" *ngIf="tabStatus.meterReading && !isConsumerSectionLoading">
+      <data-table id="meterReadingTable"
+                  [items]="usageDataMeters" [itemCount]="usageDataMeterMeta.count"
+                  [page]="usageDataMeterMeta.page"
+                  [limit]="usageDataMeterPagination.limit"
+                  [sortBy]="usageDataMeterPagination.sortBy" [sortAsc]="usageDataMeterPagination.sortAsc"
+                  [isRefreshable]="true" [isColumnsSelectable]="true"
+                  [indexColumnHeader]="'#'" [substituteRows]="false"
+                  (reload)="reloadMeterReadings($event)"
+                  [showReloading]="true" [minHeight]="false">
+        <data-table-column [property]="'usageDataFile.document.displayName'" header="File Name" [sortable]="true"></data-table-column>
+        <data-table-column [property]="'meter.meterId'" header="Meter IDs" [sortable]="true"></data-table-column>
+        <data-table-column [property]="'usageDataFile.createdTime.shortDate'" header="Upload Date" [sortable]="true"></data-table-column>
+        <data-table-column header="Usage Date" [sortable]="true">
+          <ng-template #dataTableCell let-item="item">
+            <div *ngIf="(item.usageFromDate.short !== null) || (item.usageToDate.short !== null)">
+              {{ item.usageFromDate.short }} - {{ item.usageToDate.short }}
+            </div>
+          </ng-template>
+        </data-table-column>
+        <data-table-column header="Actions">
+          <ng-template #dataTableHeader let-item="item">
+            <i>Actions</i>
+          </ng-template>
+          <ng-template #dataTableCell let-item="item">
+            <a class="btn btn-primary btn-sm" [href]="item.usageDataFile?.document?.fullFilePath" download>
+              <i class="fas fa-download"></i>
+            </a>
+          </ng-template>
+        </data-table-column>
+      </data-table>
+    </div>
+  </div>
+
+  <!--UNPAID CHARGES-->
+  <div class="unpaid-charges-reivew card border-top border-radius" *ngIf="visibleTab.unpaidCharges">
+    <div class="card-header border-0 bg-white" (click)="tabStatus.unpaidCharges = !tabStatus.unpaidCharges;">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': (tabStatus.unpaidCharges == true)}"></i>
+      <span class="font-weight-bold h5">Unpaid Charges <i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.customer || isConsumerSectionLoading"></i></span>
+    </div>
+    <div class="card-body" [ngClass]="{ 'd-none': !tabStatus.unpaidCharges || isConsumerSectionLoading }">
+      <admin-consumer-charge-table [consumer]="currentConsumer"></admin-consumer-charge-table>
+    </div>
+  </div>
+
+  <!--INVOICES-->
+  <div class="invoices-review card border-top border-radius" *ngIf="visibleTab.invoices">
+    <div class="card-header border-0 bg-white" (click)="tabStatus.invoices = !tabStatus.invoices;">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': (tabStatus.invoices == true)}"></i>
+      <span class="font-weight-bold h5">Invoices <i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.customer"></i></span>
+    </div>
+    <div class="card-body" *ngIf="tabStatus.invoices && !loadingDataTabs.customer">
+      <data-table id="invoiceTable"
+                  [items]="invoices" [itemCount]="invoicesMeta.count"
+                  [page]="invoicesMeta.page"
+                  [limit]="invoicePagination.limit"
+                  [sortBy]="invoicePagination.sortBy" [sortAsc]="invoicePagination.sortAsc"
+                  [isRefreshable]="true" [isColumnsSelectable]="true" [substituteRows]="false"
+                  [indexColumnHeader]="'#'"
+                  (reload)="reloadInvoices($event)"
+                  [showReloading]="true" [minHeight]="false">
+        <data-table-column [property]="'no'" header="Invoice No" [sortable]="true"></data-table-column>
+        <data-table-column [property]="'usageToDate'" header="Invoice Period" [sortable]="true">
+          <ng-template #dataTableCell let-item="item">
+              <span *ngIf="item.usageFromDate.short || item.usageToDate.short">
+                {{ item.usageFromDate.short }} - {{ item.usageToDate.short }}
+              </span>
+          </ng-template>
+        </data-table-column>
+        <data-table-column [property]="'invoiceDate.short'" header="Invoice Date" [sortable]="true"></data-table-column>
+        <data-table-column [property]="'totalAmount'" header="Total Amount" [sortable]="true">
+          <ng-template #dataTableCell let-item="item">
+              <span>
+                {{ item.totalAmount | number: adminConfig.numberPipe }}
+              </span>
+          </ng-template>
+        </data-table-column>
+        <data-table-column [property]="'dueDate.short'" header="Due Date" [sortable]="true"></data-table-column>
+        <data-table-column [property]="'usageAmount'" header="Usage Amount" [sortable]="true">
+          <ng-template #dataTableCell let-item="item">
+              <span>
+                {{ item.usageAmount | number: adminConfig.numberPipe }}
+              </span>
+          </ng-template>
+        </data-table-column>
+        <data-table-column [property]="'documentNamesDisplay'" header="Documents"></data-table-column>
+        <data-table-column [property]="'pricingPlanName'" [header]="'Pricing Name'"></data-table-column>
+        <data-table-column [property]="'rate'" header="Rate / Discount" [visible]="false" [sortable]="true">
+          <ng-template #dataTableCell let-item="item">
+            {{ item.rate }} / {{ item.discountPercentage || '0' }}
+          </ng-template>
+        </data-table-column>
+        <data-table-column [property]="'cleanEnergyPercentage'" [header]="'Clean Energy Percentage'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'offPeakRate'" [header]="'Off Peak Rate'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'period'" [header]="'Invoice Period'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'oldBalance'" [header]="'Outstanding Balance Before Invoice'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'newBalance'" [header]="'New Outstanding Balance'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'latePaymentCharge'" [header]="'Late Payment Charges'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'netAmount'" [header]="'Amount before GST'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'gstAmount'" [header]="'GST Amount'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'rebate'" [header]="'Rebate'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'peakConsumption'" [header]="'Peak Period Consumption'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'offPeakConsumption'" [header]="'Off Peak Period Consumption'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'remarks'" [header]="'Remarks'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'url'" [header]="'URL'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'createdTime.short'" [header]="'Created Time'" [visible]="false"></data-table-column>
+        <data-table-column [property]="'updatedTime.short'" [header]="'Last Updated Time'" [visible]="false"></data-table-column>
+        <data-table-column header="Actions">
+          <ng-template #dataTableHeader let-item="item">
+            <i>Actions</i>
+          </ng-template>
+          <ng-template #dataTableCell let-item="item">
+            <a class="btn btn-primary btn-sm text-white" title="View" [routerLink]="['/admin/management/invoices', item.id, 'detail']" [queryParams]="getHistoryParams()"><i class="fas fa-eye"></i></a>
+            <a *ngIf="item.documents?.length == 1" class="btn btn-primary btn-sm text-white" title="Download" [href]="item.documents[0].fullFilePath" download>
+              <i class="fas fa-download"></i>
+            </a>
+            <a *ngIf="item.documents?.length > 1" class="btn btn-primary btn-sm text-white" title="Download" href="javascript:void(0)"
+               (click)="documentsToDownload = item.documents; modal.open(documentsDownloadModal)">
+              <i class="fas fa-download"></i>
+            </a>
+          </ng-template>
+        </data-table-column>
+      </data-table>
+    </div>
+
+    <ng-template #documentsDownloadModal>
+      <div class="modal-body">
+        <div class="form-group row">
+          <div class="col-md-12">
+            <ul class="list-group">
+              <li *ngFor="let document of documentsToDownload" class="list-group-item">
+                <a [href]="document.fullFilePath" download>{{ document.displayName }}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+  </div>
+
+  <!--PAYMENTS-->
+  <div class="payments-reivew card border-top border-radius" *ngIf="visibleTab.payments">
+    <div class="card-header border-0 bg-white" (click)="tabStatus.payments = !tabStatus.payments;">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': tabStatus.payments }"></i>
+      <span class="font-weight-bold h5">Payments <i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.customer"></i></span>
+    </div>
+    <div class="card-body" *ngIf="tabStatus.payments && !loadingDataTabs.customer">
+      <data-table id="paymentTable"
+                  [items]="payments" [itemCount]="paymentMeta.count"
+                  [page]="paymentMeta.page"
+                  [limit]="paymentPagination.limit"
+                  [sortBy]="paymentPagination.sortBy" [sortAsc]="paymentPagination.sortAsc"
+                  [isRefreshable]="true" [isColumnsSelectable]="true" [substituteRows]="false"
+                  [indexColumnHeader]="'#'"
+                  (reload)="reloadPayments($event)"
+                  [showReloading]="true" [minHeight]="false">
+        <data-table-column property="transactionId" header="Transaction ID" [sortable]="true"></data-table-column>
+        <data-table-column property="origin" header="Mode of Payment" [sortable]="true"></data-table-column>
+        <data-table-column property="amount" header="Payment Amount" [sortable]="true">
+          <ng-template #dataTableCell let-item="item">S$ {{ item.amount }}</ng-template>
+        </data-table-column>
+        <data-table-column property="paymentDate" header="Payment Date" [sortable]="true">
+          <ng-template #dataTableCell let-item="item">{{ item.paymentDate.moment?.format('DD/MM/YY') }}</ng-template>
+        </data-table-column>
+        <data-table-column property="status" header="Status" [sortable]="true">
+          <ng-template #dataTableCell let-item="item">{{ item.status | uppercaseFirstLetter }}</ng-template>
+        </data-table-column>
+      </data-table>
+    </div>
+  </div>
+
+  <!--PAYMENT MODE-->
+  <div class="card border-top border-radius" *ngIf="visibleTab.paymentMode">
+    <div class="card-header border-0 bg-white cursor-pointer" (click)="tabStatus.paymentMode = !tabStatus.paymentMode;">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': tabStatus.paymentMode }"></i>
+      <span class="font-weight-bold h5">Payment Mode<i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.customer"></i></span>
+    </div>
+    <div class="card-body" *ngIf="tabStatus.paymentMode && !loadingDataTabs.customer">
+      <data-table id="paymentModeTable"
+                  [items]="paymentModeList" [itemCount]="paymentModeMeta.count"
+                  [page]="paymentModeMeta.page"
+                  [limit]="paymentModePagination.limit"
+                  [sortBy]="paymentModePagination.sortBy" [sortAsc]="paymentModePagination.sortAsc"
+                  [isRefreshable]="true" [isColumnsSelectable]="true" [substituteRows]="false"
+                  [indexColumnHeader]="'#'"
+                  (reload)="reloadPaymentMode($event)"
+                  [showReloading]="true" [minHeight]="false">
+        <data-table-column property="paymentMode" header="Mode of Payment" [sortable]="true"></data-table-column>
+        <data-table-column header="Payment Details" [sortable]="false">
+          <ng-template #dataTableCell let-item="item">
+            <ng-container *ngIf="item.isGiro">
+              {{ item.giroAccountBankName + ' - ' + item.giroAccountBankNo }}
+            </ng-container>
+            <ng-container *ngIf="!item.isGiro">
+              xxxx-xxxx-xxxx-{{ item.giroAccountBankNo?.substring(item.giroAccountBankNo?.length - 4, item.giroAccountBankNo?.length)
+              + ' - ' + item.expiryDate.moment?.format('MM/YY') }}
+            </ng-container>
+          </ng-template>
+        </data-table-column>
+        <data-table-column property="isAutoDeduct" header="Recurring Registration" [sortable]="true">
+          <ng-template #dataTableCell let-item="item">
+            {{ item.isAutoDeduct ? 'Yes' : 'No' }}
+          </ng-template>
+        </data-table-column>
+        <data-table-column property="updatedTime.short" header="Last Modified Date" [sortable]="true"></data-table-column>
+      </data-table>
+    </div>
+  </div>
+
+  <!--MAILS-->
+  <div class="email-reivew card border-top border-radius" *ngIf="visibleTab.mails">
+    <div class="card-header border-0 bg-white cursor-pointer" (click)="tabStatus.mails = !tabStatus.mails;">
+      <i class="fas fa-angle-right" [ngClass]="{ 'fa-rotate-90': tabStatus.mails }"></i>
+      <span class="font-weight-bold h5">Mails <i class="fas fa-spinner fa-spin" *ngIf="loadingDataTabs.mails"></i></span>
+    </div>
+    <div class="card-body" *ngIf="tabStatus.mails && !loadingDataTabs.mails">
+      <data-table id="mailTable"
+                  [items]="mailList" [itemCount]="mailMeta.count"
+                  [page]="mailMeta.page"
+                  [limit]="mailPagination.limit"
+                  [sortBy]="mailPagination.sortBy" [sortAsc]="mailPagination.sortAsc"
+                  [isRefreshable]="true" [isColumnsSelectable]="true" [substituteRows]="false"
+                  [indexColumnHeader]="'#'"
+                  (reload)="reloadMails($event)"
+                  [showReloading]="true" [minHeight]="false">
+        <data-table-column property="subject" header="Subject" [sortable]="true"></data-table-column>
+        <data-table-column property="statusDisplay" header="Status" [sortable]="true" [center]="true" [width]="100"></data-table-column>
+        <data-table-column property="reasonFail" header="Fail Reason" [visible]="false" [sortable]="true"></data-table-column>
+        <data-table-column property="emailTo" header="To" [sortable]="true"></data-table-column>
+        <data-table-column property="emailCC" header="CC" [sortable]="true"></data-table-column>
+        <data-table-column property="createdTime.short" header="Last modified date" [sortable]="true" [width]="170"></data-table-column>
+        <data-table-column header="Actions" [center]="true">
+          <ng-template #dataTableHeader let-item="item">
+            <i>Actions</i>
+          </ng-template>
+          <ng-template #dataTableCell let-item="item">
+            <a class="btn btn-primary btn-sm text-white" (click)="mailSelected = item; modal.open(previewMailContent, 'lg', {}, { class: 'mail-modal' });">
+              <i class="fas fa-eye"></i>
+            </a>
+          </ng-template>
+        </data-table-column>
+      </data-table>
+    </div>
+  </div>
+
+  <ng-template #previewMailContent>
+    <div class="mail-header pt-3 px-3 pt-1">
+      <div class="row">
+        <div class="col-9">
+            <h4 class="modal-title pull-left">
+              <span class="text-secondary">Subject:</span> {{ mailSelected.subject }}
+            </h4>
+        </div>
+        <div class="col-3 text-right">
+          {{ mailSelected.scheduleSendingTime.short }}
+        </div>
+      </div>
+      <div class="row mt-2">
+        <div class="col-12 mt-2">
+          <div class="border-bottom"><span class="text-secondary">To:</span> {{ mailSelected.emailTo }}</div>
+        </div>
+        <div class="col-12 mt-2">
+          <div class="border-bottom"><span class="text-secondary">Cc:</span> {{ mailSelected.emailCC }}</div>
+        </div>
+        <div class="col-12 mt-2">
+          <span class="text-secondary">Attachments:</span>
+          <ng-container *ngFor="let attachment of mailSelected.documents; let i = index">
+            {{ i > 0 ? ', ' : ' ' }} {{ attachment.displayName }}
+            <a href="javascript:void(0)" *ngIf="isPreviewDocumentSupport(attachment)"
+               (click)="documentToPreview = attachment; modal.open(previewDocument, 'lg');">
+              <i class="fas fa-eye"></i>
+            </a>
+            <a [href]="attachment.fullFilePath" download *ngIf="!isPreviewDocumentSupport(attachment)">
+              <i class="fas fa-download"></i>
+            </a>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="mail-content">
+        <iframe *ngIf="mailSelected.contentType === mailContentType.Html" [src]="renderEmailContentHTML(mailSelected.contentIframeDisplay)" frameborder="0" allowfullscreen></iframe>
+        <div *ngIf="mailSelected.contentType === mailContentType.Plan" [innerHTML]="mailSelected.content"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.hide()">Close</button>
+    </div>
+  </ng-template>
+
+  <ng-template #uploadFilesModal>
+    <file-upload [resourceModel]="ResourceModel.Contract" [resourceId]="currentContract?.id" (uploadSuccess)="uploadSuccess($event)"></file-upload>
+  </ng-template>
+
+  <ng-template #previewDocument>
+    <file-preview id="documentView" [attachmentPath]="documentToPreview.fullFilePath" [attachmentId]="documentToPreview.id"
+                  (changeImage)="scrollIntoView('documentView')" (closePreview)="modal.hide()"></file-preview>
+  </ng-template>
+
+  <ng-template #updateAttachmentModal>
+    <file-upload [resourceModel]="attachmentToUpdate.resourceModel" [resourceId]="attachmentToUpdate.resourceId"
+                 [originAssetId]="attachmentToUpdate.id" (uploadSuccess)="updateAttachmentOnModel($event)"></file-upload>
+  </ng-template>
+
+  <ng-template #optionContractRenewalModal>
+    <div class="modal-header">
+      <h4 class="modal-title">Select Contract Renewal</h4>
+      <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    <div class="modal-body text-center d-inline-block">
+      <div class="p-2 mb-3 text-center"> <h5>Do you want to Re-Contract or Extend Contract?</h5></div>
+      <button class="btn btn-primary pb-2" (click)="isExtendContract = false; openContractRenewalModal()">Re-Contract</button>
+      <button class="btn btn-primary pb-2" (click)="isExtendContract = true; openContractRenewalModal()">Extend Contract</button>
+    </div>
+  </ng-template>
+
+  <ng-template #contractRenewalModal>
+    <div class="modal-header">
+      <h4 class="modal-title" *ngIf="isExtendContract">Extend Contract</h4>
+      <h4 class="modal-title" *ngIf="!isExtendContract">Re-Contract</h4>
+      <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group row">
+        <label for="billing-address" class="col-md-2 font-weight-bold">Billing Address</label>
+        <div class="col-md-10" *ngIf="contractRenewal && contractRenewal.billingAddress">
+          <input type="text" id="billing-address" class="form-control"
+                 [class.is-invalid]="billingAddress?.touched && billingAddress?.invalid"
+                 [(ngModel)]="contractRenewal.billingAddress" #billingAddress="ngModel">
+
+          <div *ngIf="billingAddress?.touched && billingAddress?.invalid" class="invalid-feedback">
+
+            <div *ngIf="billingAddress?.errors.required">
+              Billing Address is required.
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="promo-code" class="col-md-2 form-control-label font-weight-bold">Promotion Code</label>
+        <div class="col-md-10">
+          <input type="text" id="promo-code" class="form-control back-ground-image-no"
+                 [class.is-invalid]="(promotionCode?.touched && promotionCode?.invalid)
+                  || (contractRenewal.promotionCode && !isPromotionCodeValid && !verifyingPromotionCode)"
+                 [class.is-valid]="isPromotionCodeValid && contractRenewal.promotionCode"
+                 (keyup)="onPromotionCodeInputKeyUp($event.target.value)"
+                 [(ngModel)]="contractRenewal.promotionCode" #promotionCode="ngModel">
+
+          <div *ngIf="verifyingPromotionCode">
+            <h6>Verifying... <i class="fas fa-spinner fa-spin"></i></h6>
+          </div>
+          <div class="invalid-feedback"
+               *ngIf="(promotionCode?.touched && promotionCode?.invalid)
+                || (contractRenewal.promotionCode && !isPromotionCodeValid && !verifyingPromotionCode)">
+            <div>Sorry this promotion/referral code is invalid.</div>
+          </div>
+          <div class="valid-feedback" *ngIf="contractRenewal.promotionCode && isPromotionCodeValid && !verifyingPromotionCode">
+            <div>Promotion/referral code is verified.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="plan-rate" class="col-md-2 font-weight-bold">Pricing Plan</label>
+        <div class="col-md-10">
+          <select id="plan-rate" class="form-control" name="plan-rate"
+                  [class.is-invalid]="pricingPlan?.touched && pricingPlan?.invalid"
+                  [disabled]="isExtendContract && !currentContract.newContract"
+                  [(ngModel)]="contractRenewal.pricingPlanName" required #pricingPlan="ngModel">
+            <option *ngFor="let option of pricingPlanList" [value]="option.name">{{ option?.pricingPlanRateDisplay }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!--<h6 class="border-bottom mb-2 mt-4 pb-1 pt-4 font-weight-bold">PROMOTIONS</h6>-->
+      <!--<data-table id="promotionTable-re-contract"-->
+                  <!--[items]="promotions"-->
+                  <!--[itemCount]="promotionsMeta.count"-->
+                  <!--[page]="promotionsMeta.page"-->
+                  <!--[limit]="promotionPagination.limit"-->
+                  <!--[sortBy]="promotionPagination.sortBy"-->
+                  <!--[sortAsc]="promotionPagination.sortAsc"-->
+                  <!--(reload)="reloadPromotions($event)"-->
+                  <!--[showReloading]="true"-->
+                  <!--[isRefreshable]="true" [isColumnsSelectable]="true" [substituteRows]="false"-->
+                  <!--[indexColumnHeader]="'#'" [minHeight]="false">-->
+        <!--<data-table-column [property]="'planRateType'" header="Type"></data-table-column>-->
+        <!--<data-table-column [property]="'issuedDate.short'" header="Issued Date" [sortable]="true"></data-table-column>-->
+        <!--<data-table-column [property]="'planRateValue'" [sortable]="true">-->
+          <!--<ng-template #dataTableHeader let-item="item">-->
+            <!--{{ (item?.planRateType?.toLowerCase() === ContractType.Dot) ? 'Discount (%)' : 'Fixed Price Discount' }}-->
+          <!--</ng-template>-->
+          <!--<ng-template #dataTableCell let-item="item">-->
+            <!--{{ (item?.planRateType?.toLowerCase() === ContractType.Dot) ? ((item?.planRateValue * 100).toFixed(2) | percentage) : (item?.planRateValue * 100).toFixed(2) }}-->
+          <!--</ng-template>-->
+        <!--</data-table-column>-->
+        <!--<data-table-column [property]="'applyingPeriods'" header="Applying Periods" [sortable]="true"></data-table-column>-->
+        <!--<data-table-column [property]="'actualUsedDate.short'" header="Start Used Date" [sortable]="true"></data-table-column>-->
+        <!--<data-table-column [property]="'expiredDate.short'" header="Expired Date" [sortable]="true"></data-table-column>-->
+      <!--</data-table>-->
+      <!--<br>-->
+      <h6 class="border-bottom mb-4 pb-1 pt-4 font-weight-bold">
+        CONTRACT DETAILS
+      </h6>
+      <div class="form-group row">
+        <label for="contract-renewal-customer-name" class="col-md-2 font-weight-bold">Customer Name</label>
+        <div class="col-md-4">
+          <input type="text" id="contract-renewal-customer-name" class="form-control"
+                 [(ngModel)]="model.name" disabled>
+        </div>
+
+        <label for="id-no" class="col-md-2 font-weight-bold">ID No.</label>
+        <div class="col-md-4">
+          <input type="text" id="id-no" class="form-control" [(ngModel)]="model.identificationNo" disabled>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="contract-renewal-mssl-no" class="col-md-2 font-weight-bold">MSSL No</label>
+        <div class="col-md-4">
+          <input type="text" id="contract-renewal-mssl-no" class="form-control" [(ngModel)]="currentConsumer.msslNo" disabled>
+        </div>
+
+        <label for="phone-number" class="col-md-2 font-weight-bold">Phone Number</label>
+        <div class="col-md-4">
+          <input type="text" id="phone-number" class="form-control" [(ngModel)]="model.mobilePhone" disabled>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="email-address" class="col-md-2 font-weight-bold">Email Address</label>
+        <div class="col-md-4">
+          <input type="text" id="email-address" class="form-control" [(ngModel)]="model.emailAddress" disabled>
+        </div>
+
+        <label for="expired-date" class="col-md-2 font-weight-bold">Expected Start Date</label>
+        <div class="col-md-4">
+          <input type="text" id="expired-date" class="form-control"
+          [(ngModel)]="contractRenewal.commissionedDate.short"
+          [bsConfig]="adminConfig?.bootstrap.datePicker"
+          bsDatepicker #expectedDate="ngModel" disabled>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-default mr-auto" (click)="modal.hide()">Cancel</button>
+      <!--<button class="btn btn-success" [disabled]="(currentContract?.billingAddress === contractRenewal?.billingAddress)-->
+        <!--&& (currentContract?.pricingPlanId === contractRenewal?.pricingPlanId)-->
+        <!--&& (contractRenewal?.promotionCode-->
+           <!--&& (currentContract?.promotionCode === contractRenewal?.promotionCode || !isPromotionCodeValid))"-->
+              <!--(click)="submitContractRenewal()">-->
+        <!--Submit & Save-->
+      <!--</button>-->
+      <button class="btn btn-primary" [disabled]="(currentContract?.billingAddress === contractRenewal?.billingAddress)
+        && (currentContract?.pricingPlanName === contractRenewal?.pricingPlanName)
+        && (contractRenewal?.promotionCode
+          && (currentContract?.promotionCode === contractRenewal?.promotionCode))
+        || verifyingPromotionCode || !isPromotionCodeValid"
+        (click)="saveContractRenewal()">
+        Save
+      </button>
+    </div>
+  </ng-template>
+</ng-container>
+
+<div class="card-body p-0">
+  <admin-table-history *ngIf="model?.id" [modelOfHistories]="'customer'" [id]="model.id"></admin-table-history>
+</div>
+
+

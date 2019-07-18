@@ -1,0 +1,28 @@
+// Import Font Awesome 4.7 source files from node_modules
+//@import "../../../../node_modules/font-awesome/scss/font-awesome";
+
+// Import Font Awesome 5 source files from node_modules
+// https://fontawesome.com/how-to-use/web-fonts-with-css#less-and-sass
+$fa-font-path: "/assets/fonts/fontawesome";
+@import "../../../node_modules/@fortawesome/fontawesome-free/scss/fontawesome";
+@import "../../../node_modules/@fortawesome/fontawesome-free/scss/solid";
+@import "../../../node_modules/@fortawesome/fontawesome-free/scss/regular";
+@import "../../../node_modules/@fortawesome/fontawesome-free/scss/brands";
+
+// Import Bootstrap source files from node_modules
+@import "bootstrap-variables";
+@import "../../../node_modules/bootstrap/scss/bootstrap";
+// Import Ngx-Bootstrap datepicker from node_modules
+@import "../../../node_modules/ngx-bootstrap/datepicker/bs-datepicker.scss";
+
+// Import vendors styles
+@import "vendors/vendors";
+
+// Override core variables
+@import "core-variables";
+
+// Import core styles
+@import "core/core";
+
+// Custom styles
+@import "custom";

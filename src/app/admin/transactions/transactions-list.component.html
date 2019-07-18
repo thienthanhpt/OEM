@@ -1,0 +1,762 @@
+<div class="row">
+  <div class="col-12">
+    <!-- Search form -->
+    <form class="form-horizontal" (ngSubmit)="reloadItems(getResetTableParameters())">
+      <div class="form-group row">
+        <div class="col-md-8">
+          <div class="input-group">
+            <input type="text" class="form-control" name="search" placeholder="Order ID / Full Name / NRIC/FIN No / Service ID / Service Address / Postal Code / Mobile Phone / Email / Promo Code"
+                   [(ngModel)]="criteriaAllInOne">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </span>
+            <span *ngIf="criteriaAllInOne !== ''" class="fa-stack fa-xs btn-cancel-upload" (click)="criteriaAllInOne = ''; reloadItems(getResetTableParameters())">
+              <i class="fas fa-times-circle fa-stack-2x"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div [ngClass]="{'col-lg-12' : !transactionToReview, 'col-lg-8' : transactionToReview}">
+    <div class="card border-top-light-blue rounded">
+
+      <div class="card-body block-loading" [class.is-loading]="isLoading">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="tabs">
+            <ng-container *ngFor="let status of transactionStatusCategories | values">
+              <button class="btn btn-tab btn-default rounded mb-1" [class.active]="activeTab == status.value" (click)="onTabSelect(status.value)">
+                <span>{{ status.name }} ({{ status.count }})</span>
+              </button>
+            </ng-container>
+          </div>
+          <div class="tab-actions text-right">
+            <button class="btn btn-primary text-white mb-1"
+                    *ngIf="activeTab == TransactionStatus.Pending || activeTab == TransactionStatus.Submitted"
+                    [disabled]="dataTable.selectedRows?.length === 0"
+                    (click)="openUpdatePricingPlanModal(updatePricingPlanModal)">
+              Change Price Plan
+            </button>
+            <button class="btn btn-primary text-white mb-1"
+                    *ngIf="activeTab == TransactionStatus.Pending"
+                    [disabled]="dataTable.selectedRows.length === 0"
+                    (click)="openMultipleTransactionUpdateStatusModal(TransactionStatus.Submitted);">
+              Submit
+            </button>
+            <button class="btn btn-primary text-white mb-1"
+                    *ngIf="activeTab == TransactionStatus.Submitted"
+                    [disabled]="dataTable.selectedRows.length === 0"
+                    (click)="openMultipleTransactionUpdateStatusModal(TransactionStatus.Approved);">
+              Approve
+            </button>
+            <button class="btn btn-danger text-white mb-1" [disabled]="dataTable.selectedRows.length === 0"
+                    *ngIf="activeTab == TransactionStatus.Cancellation"
+                    (click)="openDeleteConfirmModal(deleteTransactionConfirmModal)">
+              Delete
+            </button>
+          </div>
+        </div>
+
+
+        <data-table id="table"
+                    [items]="items"
+                    [itemCount]="meta.count"
+                    [pageDisplay]="meta.page"
+                    [limit]="20"
+                    [indexColumnHeader]="'#'"
+                    [substituteRows]="false"
+                    [header]="true"
+                    [multiSelect]="true"
+                    [selectColumn]="true"
+                    [selectOnCheckboxClick]="false"
+                    (rowClick)="onRowSelected($event.row)"
+                    (reload)="reloadItems($event)">
+
+          <data-table-column property="order.orderId" sortProperty="orderId" header="Order ID" [sortable]="true"></data-table-column>
+          <data-table-column property="contractEffectiveDate.short" sortProperty="contractExpectedStartDate" header="Expected Start Date" [sortable]="true" *ngIf="activeTab == TransactionStatus.Pending || activeTab == TransactionStatus.Submitted">
+            <ng-template #dataTableHeader>
+              {{ { subscription: 'Expected Start Date', termination: 'Actual End Date', relocation: 'Expected Relocation Date' } | switch: transactionType }}
+            </ng-template>
+            <ng-template #dataTableCell let-item="item">
+              <div *ngIf="checkExpectedStartDate(item.contractEffectiveDate.short, 7, false) && checkExpectedStartDate(item.contractEffectiveDate.short, 5, true)">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span class="text-warning">{{ item.contractEffectiveDate.moment?.format('DD/MM/YY') }}</span>
+              </div>
+              <div *ngIf="checkExpectedStartDate(item.contractEffectiveDate.short, 5, false)">
+                <i class="fas fa-exclamation-circle"></i>
+                <span class="text-danger">{{ item.contractEffectiveDate.moment?.format('DD/MM/YY') }}</span>
+              </div>
+              <div *ngIf="checkExpectedStartDate(item.contractEffectiveDate.short, 7, true)">
+                {{ item.contractEffectiveDate.moment?.format('DD/MM/YY') }}
+              </div>
+            </ng-template>
+          </data-table-column>
+          <data-table-column property="order.customerName" sortProperty="customerName" header="Name" [sortable]="true"></data-table-column>
+          <data-table-column property="order.documentId" sortProperty="customerIdentification" header="NRIC/FIN No" [sortable]="true">
+            <ng-template #dataTableCell let-item="item">
+              {{ item.order.documentId | uppercase }}
+            </ng-template>
+          </data-table-column>
+          <data-table-column property="order.rootItem.serviceId" sortProperty="consumerServiceId" header="Service ID" [sortable]="true"></data-table-column>
+          <data-table-column property="serviceAddress" sortProperty="consumerServiceAddress" header="Service Address" [sortable]="true"></data-table-column>
+          <data-table-column property="postalCode" sortProperty="consumerPostal" header="Postal Code" [sortable]="true"></data-table-column>
+          <data-table-column property="order.items[0].contractSignedDate.short" sortProperty="contractSignedDate" header="Signed Date" [sortable]="true"></data-table-column>
+          <data-table-column property="order.customerEmail" sortProperty="customerEmail" header="Email Address" [sortable]="true" [visible]="false"></data-table-column>
+          <data-table-column property="order.customerPhoneNumber" sortProperty="customerPhoneNumber" header="Mobile" [sortable]="true" [visible]="false"></data-table-column>
+          <data-table-column property="order.items[0].productName" sortProperty="productName" header="Price Plan" [sortable]="true" [visible]="false"></data-table-column>
+          <data-table-column property="order.items[0].productRate" header="Signed Rate" [visible]="false"></data-table-column>
+          <data-table-column property="order.promotionCode" header="Promotion Code" [visible]="false"></data-table-column>
+          <data-table-column property="contractTerm" sortProperty="contractTerms" header="Term" [sortable]="true" [visible]="false"></data-table-column>
+          <data-table-column property="order.rootItem.billingAccount" header="Billing Account" [visible]="false"></data-table-column>
+          <data-table-column property="contractCommissionedDate.short" sortProperty="" header="Commissioned Date" [visible]="false" [sortable]="true"
+                             *ngIf="!( transactionType == OrderTransactionType.Subscription && (activeTab == TransactionStatus.Pending || activeTab == TransactionStatus.Submitted))"></data-table-column>
+          <data-table-column property="createdTime.short" header="Created Date" [sortable]="true" [visible]="false"></data-table-column>
+          <data-table-column *ngIf="activeTab == TransactionStatus.Pending" property="expiredDate.short" header="Expiry Date" [sortable]="true" [visible]="false"></data-table-column>
+          <data-table-column *ngIf="activeTab == TransactionStatus.Approved" property="approvedDate.short" header="Approved Date" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column *ngIf="activeTab == TransactionStatus.Rejected" property="rejectedDate.short" header="Rejected Date" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column *ngIf="activeTab == TransactionStatus.Cancellation" property="cancelledDate.short" header="Cancellation Date" [visible]="false" [sortable]="true"></data-table-column>
+          <data-table-column property="selector" [selectable]="false" [width]="40">
+            <ng-template #dataTableCell let-item="item">
+              <span [ngClass]="{'text-secondary': transactionToReview !== item}">
+                <i class="fas fa-angle-right" style="font-size: 2rem;"></i>
+              </span>
+            </ng-template>
+          </data-table-column>
+        </data-table>
+
+        <ng-template #confirmUpdateStatusModal>
+          <div class="modal-body">
+            <form action="" method="post" class="form-horizontal" #modalForm="ngForm">
+
+              <div class="form-group row">
+                <label class="col-md-3 form-control-label" for="order-id">Order ID</label>
+                <div class="col-md-9">
+                  <input id="order-id" name="order-id" [value]="transactionToUpdateStatus.order?.orderId" class="form-control" disabled />
+                </div>
+              </div>
+
+              <div *ngIf="transactionToUpdateStatus.status == TransactionStatus.Approved
+                      || (transactionToUpdateStatus.status == TransactionStatus.Rejected && transactionType != OrderTransactionType.Subscription)"
+                   class="form-group row">
+                <label class="col-md-3 form-control-label required" for="mssl-no">SP Account Number</label>
+                <div class="col-md-9">
+                  <input type="number" id="mssl-no" name="mssl-no" class="form-control" placeholder="SP Account Number"
+                         [class.is-invalid]="(msslNo.touched && msslNo.invalid) || !transactionToUpdateStatus.isMsslNumberValid"
+                         [class.is-valid]="transactionToUpdateStatus.isMsslNumberValid"
+                         (keyup)="onNewMsslNoKeyUp(transactionToUpdateStatus, msslNo.value)"
+                         onKeyPress="if(this.value.length === 10) return false;"
+                         [disabled]="transactionToUpdateStatus.isMsslNumberValidating"
+                         [required]="transactionType == OrderTransactionType.Subscription"
+                         [readonly]="transactionType == OrderTransactionType.Termination"
+                         [(ngModel)]="transactionToUpdateStatus.msslNo" #msslNo="ngModel"/>
+                  <div *ngIf="msslNo.touched && msslNo.invalid" class="invalid-feedback">
+                    <div *ngIf="msslNo?.errors.required">
+                      SP Account Number is required.
+                    </div>
+                  </div>
+
+                  <div *ngIf="transactionToUpdateStatus.isMsslNumberValidating">
+                    <h6>Verifying... <i class="fas fa-spinner fa-spin"></i></h6>
+                  </div>
+                  <div class="invalid-feedback" *ngIf="msslNo.value && !transactionToUpdateStatus.isMsslNumberValid && !transactionToUpdateStatus.isMsslNumberValidating">
+                    <div>SP Account Number is invalid.</div>
+                  </div>
+                  <div class="valid-feedback" *ngIf="transactionToUpdateStatus.isMsslNumberValid ">
+                    <div>Valid SP Account Number.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="transactionToUpdateStatus.status == TransactionStatus.Approved"
+                   class="form-group row">
+                <label class="col-md-3 form-control-label required" for="mssl-no">Meter ID</label>
+                <div class="col-md-9">
+                  <input id="meter-id" name="meter-id" class="form-control" placeholder="Meter Id"
+                         [class.is-invalid]="(meterId.touched && meterId.invalid) || !transactionToUpdateStatus.isMeterIdValid"
+                         [class.is-valid]="transactionToUpdateStatus.isMeterIdValid"
+                         maxlength="11" (keyup)="onNewMeterIdKeyUp(transactionToUpdateStatus, meterId.value)"
+                         [required]="transactionType == OrderTransactionType.Subscription"
+                         [readonly]="transactionType == OrderTransactionType.Termination"
+                         [(ngModel)]="transactionToUpdateStatus.meterId" #meterId="ngModel"/>
+                  <div *ngIf="meterId.touched && meterId.invalid" class="invalid-feedback">
+                    <div *ngIf="meterId?.errors.required">
+                      Meter ID is required.
+                    </div>
+                  </div>
+                  <div *ngIf="transactionToUpdateStatus.isMeterIdValidating">
+                    <h6>Verifying... <i class="fas fa-spinner fa-spin"></i></h6>
+                  </div>
+                  <div class="invalid-feedback" *ngIf="meterId.value && !transactionToUpdateStatus.isMeterIdValid && !transactionToUpdateStatus.isMeterIdValidating">
+                    <div>Meter ID is invalid.</div>
+                  </div>
+                  <div class="valid-feedback" *ngIf="transactionToUpdateStatus.isMeterIdValid">
+                    <div>Valid Meter ID.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="transactionToUpdateStatus.status == TransactionStatus.Approved" class="form-group row">
+                <label for="billing-option" class="col-md-3 form-control-label">Billing Option</label>
+                <div class="col-md-9">
+                  <select name="billing-option" id="billing-option" class="form-control"
+                          [(ngModel)]="transactionToUpdateStatus.billingOption">
+                    <option value="">None</option>
+                    <option *ngIf="transactionToUpdateStatus.billingBC" [value]="transactionToUpdateStatus.billingBC">
+                      {{ billingBcOptions[transactionToUpdateStatus.billingBC].value }}
+                    </option>
+                    <option *ngFor="let option of billingOptions | toArray" [value]="option.key">{{ option.key }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div *ngIf="transactionToUpdateStatus.status == TransactionStatus.Submitted" class="form-group row">
+                <label class="col-md-3 form-control-label" for="effective-date">
+                  {{ { subscription: 'Expected Start Date', termination: 'Actual End Date', relocation: 'Relocation Date' } | switch: transactionType }}
+                </label>
+                <div class="col-md-9">
+                  <input id="effective-date" name="effective-date" class="form-control"
+                         [placeholder]="{ subscription: 'Expected Start Date', termination: 'Actual End Date', relocation: 'Relocation Date' } | switch: transactionType"
+                         bsDatepicker required
+                         [bsConfig]="adminConfig?.bootstrap.datePicker"
+                         [(ngModel)]="transactionToUpdateStatus.contractEffectiveDate.short">
+                </div>
+              </div>
+
+              <div *ngIf="transactionToUpdateStatus.status == TransactionStatus.Approved" class="form-group row">
+                <label class="col-md-3 form-control-label" for="commissioned-date">
+                  {{ { subscription: 'Expected Start Date', termination: 'Actual End Date', relocation: 'Relocation Date' } | switch: transactionType }}
+                </label>
+                <div class="col-md-9">
+                  <input id="commissioned-date" name="commissioned-date" class="form-control"
+                         [placeholder]="{ subscription: 'Expected Start Date', termination: 'Actual End Date', relocation: 'Relocation Date' } | switch: transactionType"
+                         bsDatepicker required
+                         [bsConfig]="adminConfig?.bootstrap.datePicker"
+                         [(ngModel)]="transactionToUpdateStatus.contractCommissionedDate.short">
+                </div>
+              </div>
+
+              <div *ngIf="transactionToUpdateStatus.status == TransactionStatus.Rejected" class="form-group row">
+                <label class="col-md-3 form-control-label required" for="rejected-reason">Reject Reason</label>
+                <div class="col-md-9">
+                  <select id="rejected-reason" name="rejected-reason" class="form-control"
+                          [hidden]="transactionToUpdateStatus.status != TransactionStatus.Rejected"
+                          [(ngModel)]="transactionToUpdateStatus.rejectedReason"
+                          required
+                          #rejectReason="ngModel">
+                    <option [value]="null" disabled>Please select a reject reason</option>
+                    <option *ngFor="let option of rejectReasonOptions" [value]="option">{{ option }}</option>
+                  </select>
+                </div>
+
+                <div *ngIf="rejectReason.touched && rejectReason.invalid" class="invalid-feedback">
+
+                  <div *ngIf="rejectReason?.errors.required">
+                    Reject reason is required.
+                  </div>
+
+                </div>
+              </div>
+
+            </form>
+            <hr>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-md btn-default float-left" (click)="modal.hide()">Back</button>
+              <button type="button" class="btn btn-md btn-success float-right"
+                      [disabled]="!modalForm.form.valid" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                      *ngIf="transactionToUpdateStatus.status == TransactionStatus.Submitted" (click)="updateStatus()">
+                Submit
+              </button>
+              <button type="button" class="btn btn-md btn-success float-right"
+                      [disabled]="!modalForm.form.valid || !canUpdateStatus" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                      *ngIf="transactionToUpdateStatus.status == TransactionStatus.Approved" (click)="updateStatus()">
+                Approve
+              </button>
+              <button type="button" class="btn btn-md float-right btn-danger"
+                      [disabled]="!modalForm.form.valid" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                      *ngIf="transactionToUpdateStatus.status == TransactionStatus.Rejected" (click)="updateStatus()">
+                Reject
+              </button>
+              <button type="button" class="btn btn-md float-right btn-warning"
+                      [disabled]="!modalForm.form.valid" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                      *ngIf="transactionToUpdateStatus.status == TransactionStatus.Cancellation" (click)="updateStatus()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template #confirmMultipleUpdateStatusModal>
+          <div class="modal-body" *ngIf="multipleTransactionToUpdateStatus.length > 0">
+            <form action="" method="post" class="form-horizontal" id="modalFormMultiple" #modalFormMultiple="ngForm" novalidate>
+              <table class="table table-striped">
+                <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Order ID</th>
+                  <th scope="col">Full Name</th>
+                  <th scope="col" *ngIf="activeTab == TransactionStatus.Submitted">Postal Code</th>
+                  <th scope="col" *ngIf="activeTab == TransactionStatus.Submitted">Sp Account Number</th>
+                  <th scope="col" *ngIf="activeTab == TransactionStatus.Submitted">Meter ID</th>
+                  <th scope="col" width="110" *ngIf="activeTab == TransactionStatus.Submitted">Billing Option</th>
+                  <th scope="col" *ngIf="activeTab == TransactionStatus.Pending">SP Account Number</th>
+                  <th scope="col" *ngIf="activeTab == TransactionStatus.Pending">Postal Code</th>
+                  <th scope="col">Expected Start Date</th>
+                  <th scope="col">Promotion Code</th>
+                  <th scope="col" *ngIf="activeTab == TransactionStatus.Submitted">Status</th>
+                  <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let transaction of multipleTransactionToUpdateStatus; let i = index">
+                    <th scope="row">{{ i + 1 }}</th>
+                    <td>{{ transaction.order?.orderId }}</td>
+                    <td>{{ transaction.order?.customerName }}</td>
+                    <td *ngIf="activeTab == TransactionStatus.Pending">{{ transaction.order?.items[0]?.serviceId }}</td>
+                    <td>{{ transaction.postalCode }}</td>
+                    <td *ngIf="activeTab == TransactionStatus.Submitted">
+                      <div class="form-group">
+                        <input type="number" [name]="'mssl-no-' + transaction.order?.orderId" class="form-control" placeholder="SP Account Number"
+                               [class.is-invalid]="(msslNo.touched && msslNo.invalid) || !transaction.isMsslNumberValid"
+                               [class.is-valid]="transaction.isMsslNumberValid"
+                               required (keyup)="onNewMsslNoKeyUp(transaction, msslNo.value)"
+                               onKeyPress="if(this.value.length === 10) return false;"
+                               [disabled]="transaction.isMsslNumberValidating"
+                               [(ngModel)]="transaction.msslNo" #msslNo="ngModel"/>
+                        <div *ngIf="msslNo.touched && msslNo.invalid" class="invalid-feedback">
+                          <div *ngIf="msslNo?.errors.required">
+                            SP Account Number is required.
+                          </div>
+                        </div>
+                        <div *ngIf="transaction.isMsslNumberValidating">
+                          <h6>Verifying... <i class="fas fa-spinner fa-spin"></i></h6>
+                        </div>
+                        <div class="invalid-feedback" *ngIf="msslNo.value && !transaction.isMsslNumberValid && !transaction.isMsslNumberValidating">
+                          <div>SP Account Number is invalid.</div>
+                        </div>
+                        <div class="valid-feedback" *ngIf="transaction.isMsslNumberValid ">
+                          <div>Valid SP Account Number.</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td *ngIf="activeTab == TransactionStatus.Submitted">
+                      <div class="form-group">
+                        <input [name]="'meter-id-' + transaction.order?.orderId" class="form-control" placeholder="Meter Id"
+                               [class.is-invalid]="(meterId.touched && meterId.invalid) || !transaction.isMeterIdValid"
+                               [class.is-valid]="transaction.isMeterIdValid"
+                               maxlength="11" required (keyup)="onNewMeterIdKeyUp(transaction, meterId.value)"
+                               [(ngModel)]="transaction.meterId" #meterId="ngModel"/>
+                        <div *ngIf="meterId.touched && meterId.invalid" class="invalid-feedback">
+                          <div *ngIf="meterId?.errors.required">
+                            Meter ID is required.
+                          </div>
+                        </div>
+                        <div *ngIf="transaction.isMeterIdValidating">
+                          <h6>Verifying... <i class="fas fa-spinner fa-spin"></i></h6>
+                        </div>
+                        <div class="invalid-feedback" *ngIf="meterId.value && !transaction.isMeterIdValid && !transaction.isMeterIdValidating">
+                          <div>Meter ID is invalid.</div>
+                        </div>
+                        <div class="valid-feedback" *ngIf="transaction.isMeterIdValid ">
+                          <div>Valid Meter ID.</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td *ngIf="activeTab == TransactionStatus.Submitted">
+                      <div class="form-group">
+                        <select [name]="'billing-option-' + transaction.order?.orderId" class="form-control"
+                                [(ngModel)]="transaction.billingOption">
+                          <option value="">None</option>
+                          <option *ngIf="transaction.billingBC" [value]="transaction.billingBC">
+                            {{ billingBcOptions[transaction.billingBC].value }}
+                          </option>
+                          <option *ngFor="let option of billingOptions | toArray" [value]="option.key">{{ option.key }}</option>
+                        </select>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="form-group" *ngIf="activeTab == TransactionStatus.Pending">
+                        <input class="form-control" [name]="'effective-date-' + transaction.order?.orderId"
+                               placeholder="Expected Start Date"
+                               bsDatepicker required
+                               [class.is-invalid]="expectedStartDate.touched && expectedStartDate.invalid"
+                               [bsConfig]="adminConfig?.bootstrap.datePicker"
+                               [(ngModel)]="transaction.contractEffectiveDate.short" #expectedStartDate="ngModel">
+                        <div *ngIf="expectedStartDate.touched && expectedStartDate.invalid" class="invalid-feedback">
+                          <div *ngIf="expectedStartDate?.errors.required">
+                            Expected Start Date is required.
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group" *ngIf="activeTab == TransactionStatus.Submitted">
+                        <input class="form-control" [name]="'commissioned-date-' + transaction.order?.orderId"
+                               placeholder="Expected Start Date"
+                               bsDatepicker required
+                               [class.is-invalid]="commissionedDate.touched && commissionedDate.invalid"
+                               [bsConfig]="adminConfig?.bootstrap.datePicker"
+                               [(ngModel)]="transaction.contractCommissionedDate.short" #commissionedDate="ngModel">
+                        <div *ngIf="commissionedDate.touched && commissionedDate.invalid" class="invalid-feedback">
+                          <div *ngIf="commissionedDate?.errors.required">
+                            Expected Start Date is required.
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="form-group">
+                        <input *ngIf="transaction.order" type="text" class="form-control"
+                               [name]="'promo-code-' + transaction.id"
+                               (ngModelChange)="onChangeAndVerifyPromotionCodeOnTable(transaction, promoCode?.value)"
+                               [(ngModel)]="transaction.order.promotionCode"
+                               [class.is-invalid]="(promoCode?.touched && promoCode?.invalid) || (promoCode?.value && !transaction.isPromoCodeValid)"
+                               [class.is-valid]="transaction.order?.promotionCode && transaction.isPromoCodeValid"
+                               #promoCode="ngModel">
+                        <div class="invalid-feedback" *ngIf="promoCode?.touched && promoCode?.invalid">
+                          <div *ngIf="!transaction.order?.promotionCode">Promotion code is required.</div>
+                        </div>
+                        <div *ngIf="transaction.isPromoCodeValidating">
+                          <h6>Verifying... <i class="fas fa-spinner fa-spin"></i></h6>
+                        </div>
+                        <div class="invalid-feedback" *ngIf="transaction.order?.promotionCode && !transaction.isPromoCodeValid && !transaction.isPromoCodeValidating">
+                          <div>Sorry this promotion/referral code is invalid.</div>
+                        </div>
+                        <div class="valid-feedback" *ngIf="transaction.order?.promotionCode && transaction.isPromoCodeValid">
+                          <div>Promotion/referral code is verified.</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center" *ngIf="activeTab == TransactionStatus.Submitted">
+                      <span *ngIf="transaction.isValidating"><i class="fas fa-spinner fa-spin"></i></span>
+                      <span class="text-success"
+                            *ngIf="!(transaction.warning || transaction.error) && !transaction.isValidating
+                            && transaction.isMeterIdValid && transaction.isMsslNumberValid && transaction.isPromoCodeValid">
+                        <i class="fas fa-check-circle"></i>
+                      </span>
+                      <span class="text-secondary" *ngIf="!transaction.error && !transaction.warning
+                      && (!transaction.isMeterIdValid || !transaction.isMsslNumberValid || !transaction.isPromoCodeValid)"
+                            data-toggle="tooltip" [title]="transaction.reasonMessage">
+                        <i class="fas fa-check-circle"></i>
+                      </span>
+                      <span class="text-warning" data-toggle="tooltip" [title]="transaction.reasonMessage" style="cursor: pointer"
+                            (click)="transactionToConfirm = transaction; modal.open(warningTransactionConfirmModal, 'md')"
+                            *ngIf="transaction.warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                      </span>
+                      <span class="text-danger" *ngIf="transaction.error" data-toggle="tooltip" [title]="transaction.reasonMessage">
+                        <i class="fas fa-exclamation-circle"></i>
+                      </span>
+                    </td>
+                    <td>
+                      <a href="javascript:void(0)" class="text-danger" (click)="!modalLoading && removeTransactionFromList(transaction)">
+                        <i class="fas fa-trash-alt"></i>
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <hr>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-md btn-default float-left" (click)="modal.hide()">Back</button>
+                <button class="btn btn-md btn-success float-right"
+                        *ngIf="activeTab == TransactionStatus.Pending"
+                        [disabled]="!modalFormMultiple || !modalFormMultiple.valid || isExistsPromotionCodeInvalid"
+                        [loadingDisable]="modalLoading" [displaySpinner]="true"
+                        (click)="updateStatus(true)">
+                  <span class="font-weigh-bold">Submit</span>
+                </button>
+                <button class="btn btn-md btn-success float-right"
+                        *ngIf="activeTab == TransactionStatus.Submitted"
+                        [disabled]="!modalFormMultiple || !modalFormMultiple.valid || !canUpdateStatus"
+                        [loadingDisable]="modalLoading" [displaySpinner]="true" (click)="updateStatus(true)">
+                  <span class="font-weigh-bold">Approve</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </ng-template>
+
+        <ng-template #updatePricingPlanModal>
+          <div class="modal-body" *ngIf="multipleTransactionToUpdateStatus.length > 0">
+            <table class="table table-striped" *ngIf="isMultipleUpdatePricePlan">
+              <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Order ID</th>
+                <th scope="col">Full Name</th>
+                <th scope="col">Postal Code</th>
+                <th scope="col">Price Plan</th>
+                <th scope="col"></th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let transaction of multipleTransactionToUpdateStatus; let i = index">
+                <th scope="row">{{ i + 1 }}</th>
+                <td>{{ transaction.order?.orderId }}</td>
+                <td>{{ transaction.order?.customerName }}</td>
+                <td>{{ transaction.postalCode }}</td>
+                <td>{{ transaction.order.items[0].productName }}</td>
+                <td>
+                  <a href="javascript:void(0)" class="text-danger" (click)="!modalLoading && removeTransactionFromList(transaction)">
+                    <i class="fas fa-trash-alt"></i>
+                  </a>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+            <label class="form-control-label" for="pricing-plan">New Pricing Plan</label>
+            <select name="pricing-plan" id="pricing-plan" class="form-control"
+                    [class.is-invalid]="selectedPlan.isError" [disabled]="modalLoading"
+                    (change)="pricePlanToUpdate = $event.target.value; selectedPlan.isError = false"
+                    required [ngModel]="pricePlanToUpdate" #selectedPlan="ngModel">
+              <option [value]="null" disabled>Please select a Pricing Plan</option>
+              <option *ngFor="let pricingPlan of pricingPlanList" [value]="pricingPlan.name">{{ pricingPlan.name }}</option>
+            </select>
+            <div *ngIf="selectedPlan.isError" class="invalid-feedback">
+              <div *ngIf="selectedPlan?.errors.required">
+                Pricing plan is required.
+              </div>
+            </div>
+            <hr>
+            <button type="button" class="btn btn-md btn-default float-left" (click)="pricePlanToUpdate = null; modal.hide()">Back</button>
+            <button type="button" class="btn btn-primary float-right" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                    (click)="pricePlanToUpdate ? updateTransactionPricingPlan(pricePlanToUpdate, multipleTransactionToUpdateStatus) : (selectedPlan.isError = true)">
+              Submit
+            </button>
+          </div>
+        </ng-template>
+
+        <ng-template #updatePromotionCodeModal>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-control-label" for="promotion-code">Update Promotion Code</label>
+              <input name="pricing-plan" id="promotion-code" class="form-control" [disabled]="modalLoading"
+                     [class.is-invalid]="(promotionCode?.touched && promotionCode?.invalid) || (promotionCodeToUpdate && !isPromotionCodeValid)"
+                     [class.is-valid]="isPromotionCodeValid" (keyup)="onPromotionCodeInputKeyUp($event.target.value)"
+                     required [(ngModel)]="promotionCodeToUpdate" #promotionCode="ngModel">
+              <div class="invalid-feedback" *ngIf="promotionCode?.touched && promotionCode?.invalid">
+                <div *ngIf="!promotionCodeToUpdate">Promotion code is required.</div>
+              </div>
+              <div *ngIf="verifyingPromotionCode">
+                <h6>Verifying... <i class="fas fa-spinner fa-spin"></i></h6>
+              </div>
+              <div class="invalid-feedback" *ngIf="promotionCodeToUpdate && !isPromotionCodeValid && !verifyingPromotionCode">
+                <div>Sorry this promotion/referral code is invalid.</div>
+              </div>
+              <div class="valid-feedback" *ngIf="isPromotionCodeValid">
+                <div>Promotion/referral code is verified.</div>
+              </div>
+            </div>
+            <hr>
+            <button type="button" class="btn btn-md btn-default float-left" (click)="modal.hide()">Back</button>
+            <button type="button" class="btn btn-primary float-right" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                    [disabled]="promotionCode?.invalid || !isPromotionCodeValid"
+                    (click)="updateTransactionPromotionCode(promotionCodeToUpdate, transactionToReview)">
+              Submit
+            </button>
+          </div>
+        </ng-template>
+
+        <ng-template #removePromotionCodeModal>
+          <div class="pt-3 pr-4 pl-4">
+            <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body text-center pl-5 pr-5 pb-5">
+            <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+            <h5 class="mt-4 mb-3 font-weight-bold">Are you sure you want to remove promotion code?</h5>
+            <div class="text-center">
+              <button type="button" class="btn btn-default btn-md" (click)="modal.hide()">Cancel</button>
+              <button type="button" class="btn btn-danger text-white" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                      (click)="updateTransactionPromotionCode('', transactionToReview)">
+                Remove
+              </button>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template #deleteTransactionConfirmModal>
+          <div class="pt-3 pr-4 pl-4">
+            <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body text-center pl-5 pr-5 pb-5">
+            <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+            <h5 class="mt-4 mb-3 font-weight-bold">Are you sure you want to delete?</h5>
+            <div class="text-center">
+              <button type="button" class="btn btn-default btn-md" (click)="pricePlanToUpdate = null; modal.hide()">Cancel</button>
+              <button type="button" class="btn btn-danger text-white" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                      (click)="deleteTransaction(multipleTransactionToUpdateStatus)">
+                Delete
+              </button>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template #warningTransactionConfirmModal>
+          <div class="pt-3 pr-4 pl-4">
+            <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body text-center pl-5 pr-5 pb-5">
+            <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+            <h5 class="mt-4 mb-3 font-weight-bold">Existed orders with the same SP account number. Are you sure to approve to order?</h5>
+            <div class="text-center">
+              <button type="button" class="btn btn-md" (click)="modal.hide();">No</button>
+              <button type="button" class="btn btn-primary text-white" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                      (click)="confirmWarningApproval(transactionToConfirm);">
+                Yes
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4 order-detail" *ngIf="transactionToReview">
+    <div class="card border-top-light-blue rounded">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-12 col-xl-6 d-flex align-items-center">
+            <button class="btn btn-close" (click)="removeSelectedRow()"><i class="fas fa-times-circle"></i></button>
+            <h4 class="pt-1 ml-2">Order details</h4>
+          </div>
+          <div class="col-12 col-xl-6" *ngIf="transactionToReview.status === TransactionStatus.Pending">
+            <button class="btn btn-primary text-white py-0 mb-1" (click)="openTransactionUpdateStatusModal(TransactionStatus.Submitted);">Submit</button>
+            <button class="btn bg-transparent border border-danger py-0 mb-1" (click)="openTransactionUpdateStatusModal(TransactionStatus.Rejected);">Reject</button>
+            <button class="btn bg-transparent border border-warning py-0 mb-1" (click)="openTransactionUpdateStatusModal(TransactionStatus.Cancellation);">Cancel</button>
+          </div>
+          <div class="col-12 col-xl-6" *ngIf="transactionToReview.status === TransactionStatus.Submitted">
+            <button class="btn btn-primary text-white py-0 mb-1" (click)="openTransactionUpdateStatusModal(TransactionStatus.Approved);">
+              Approve
+            </button>
+            <button class="btn bg-transparent border border-danger py-0 mb-1" (click)="openTransactionUpdateStatusModal(TransactionStatus.Rejected);">Reject</button>
+            <button class="btn bg-transparent border border-warning py-0 mb-1" (click)="openTransactionUpdateStatusModal(TransactionStatus.Cancellation);">Cancel</button>
+          </div>
+          <div class="col-12 col-xl-6 text-right" *ngIf="transactionToReview.status === TransactionStatus.Cancellation">
+            <button class="btn bg-danger text-white py-0 mb-1" (click)="openDeleteConfirmModal(deleteTransactionConfirmModal, false)">Delete</button>
+          </div>
+        </div>
+
+        <p class="mt-2"><strong>Order ID</strong> {{ transactionToReview.order?.orderId }}</p>
+
+        <div class="row mt-2">
+          <div class="col-xl-6 mb-3 mb-xl-0">
+            <p><strong><u>Customer</u></strong>
+              <a [routerLink]="['/admin/management/customers/' + transactionToReview.order?.customerId + '/detail']" class="text-dark">
+                <i class="fas fa-eye pl-1"></i>
+              </a>
+            </p>
+            <p><strong>Type</strong> {{ transactionToReview.order?.customerTypeDisplay }}</p>
+            <p><strong>Name</strong> {{ transactionToReview.order?.customerName }}</p>
+            <p><strong>ID type</strong> {{ transactionToReview.order?.documentIdType | uppercase }}</p>
+            <p><strong>NRIC/FIN No</strong> {{ transactionToReview.order?.documentId }}</p>
+          </div>
+          <div class="col-xl-6">
+            <p><strong><u>Contact</u></strong></p>
+            <p><strong>Email</strong> {{ transactionToReview.order?.customerEmail }}</p>
+            <p><strong>Mobile</strong> {{ transactionToReview.order?.customerPhoneNumber }}</p>
+          </div>
+        </div>
+
+        <div class="row mt-2">
+          <div class="col-xl-6 mb-3 mb-xl-0">
+            <p><strong><u>Consumer</u></strong></p>
+            <p><strong>Service ID</strong> {{ transactionToReview.order?.items[0]?.serviceId }}</p>
+            <p><strong>Address</strong> {{ transactionToReview.serviceAddress || transactionToReview.order.customerAddress }}</p>
+            <p><strong>Postal Code</strong> {{ transactionToReview.postalCode }}</p>
+          </div>
+          <div class="col-xl-6">
+            <p><strong><u>Contract</u></strong></p>
+            <p><strong>Ref.</strong> {{ transactionToReview.order?.items[0]?.contractRef }}</p>
+            <p>
+              <strong>Plan</strong>
+              <ng-container *ngIf="transactionToReview.status === TransactionStatus.Pending || transactionToReview.status === TransactionStatus.Submitted">
+                <a href="javascript:void(0)" (click)="openUpdatePricingPlanModal(updatePricingPlanModal, false)"><i class="fas fa-edit pl-1"></i></a>
+                <br>
+              </ng-container>
+              {{ transactionToReview.order?.items[0]?.productName }}
+            </p>
+
+            <p><strong>Term</strong> {{ transactionToReview.contractTerm }}</p>
+            <p><strong>Signed Date</strong> {{ transactionToReview.order?.items[0]?.contractSignedDate.short }}</p>
+            <p><strong>Start Date</strong> {{ transactionToReview.contractEffectiveDate.short }}</p>
+            <p><strong>Signed rate</strong> {{ transactionToReview.order?.items[0]?.productRate }}</p>
+          </div>
+        </div>
+
+        <div class="row mt-2">
+          <div class="col-12">
+            <p>
+              <strong><u>Promotion</u></strong>
+              <a href="javascript:void(0)"
+                 (click)="openUpdatePromotionCodeModal()"
+                 *ngIf="transactionToReview.status === TransactionStatus.Pending || transactionToReview.status === TransactionStatus.Submitted">
+                <i class="fas fa-edit pl-1"></i>
+              </a>
+              <a href="javascript:void(0)"
+                 (click)="modal.open(removePromotionCodeModal, 'md')"
+                 *ngIf="transactionToReview.order.promotionCode && (transactionToReview.status === TransactionStatus.Pending || transactionToReview.status === TransactionStatus.Submitted)">
+                <i class="fas fa-times-circle text-danger pl-1"></i>
+              </a>
+            </p>
+          </div>
+          <div class="col-xl-6">
+            <p><strong>Code</strong> {{ transactionToReview.order?.promotionCode }}</p>
+            <p><strong>Benefits</strong> <span class="ml-1" *ngIf="transactionToReview.order?.promotionAmount">{{ transactionToReview.order?.promotionAmountDisplay }}$</span></p>
+          </div>
+          <div class="col-xl-6">
+            <p><strong>Origin</strong> {{ transactionToReview.contractOriginDisplay }}</p>
+            <p><strong>Marketing consent</strong> {{ transactionToReview.consent | booleans }}</p>
+          </div>
+        </div>
+
+        <div class="row mt-2">
+          <div class="col-12">
+            <p><strong><u>Attachments</u></strong></p>
+          </div>
+          <div class="col-xl-6" *ngFor="let attachment of transactionToReview.orderDocuments">
+            <p class="pt-2">{{ attachment.displayName }}</p>
+            <div class="attachment-preview">
+              <img [src]="'https://' + attachment.filePath" alt="attachment" class="img-fluid"
+                   onerror="this.src='../../../assets/images/file.png'; this.loadError = true" #previewImage>
+              <div class="image-overlay">
+                <a href="javascript:void(0)" class="btn btn-primary mr-2" *ngIf="isPreviewDocumentSupport(attachment) || !previewImage.loadError" (click)="initPreviewDocument(attachment);">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a [href]="'https://' + attachment.filePath" class="btn btn-primary" download>
+                  <i class="fas fa-download"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #previewDocument>
+    <file-preview id="documentView" [attachmentPath]="attachmentToPreview.fullFilePath" [attachmentId]="attachmentToPreview.id"
+                  (changeImage)="scrollIntoView('documentView')" (closePreview)="modal.hide()"></file-preview>
+  </ng-template>
+
+  <ng-template #warningUpdatePromotionCodeModal>
+    <div class="pt-3 pr-4 pl-4">
+      <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body text-center pl-5 pr-5 pb-5">
+      <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+      <h5 class="mt-4 font-weight-bold">Order have invalid Promotion Code.</h5>
+      <h5 class="mb-3 font-weight-bold">Please to input other Promotion Code before an order is submitted or approved?</h5>
+      <div class="text-center">
+        <button type="button" class="btn btn-primary text-white" [loadingDisable]="modalLoading" [displaySpinner]="true"
+                (click)="modal.hide();">
+          Yes
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</div>

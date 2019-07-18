@@ -1,0 +1,57 @@
+<div class="modal-header">
+  <h5 class="modal-title">Select Consumer</h5>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="closeModal()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body" [loadingDisplay]="isConsumerLoading">
+  <!-- Search form -->
+  <form class="form-horizontal">
+    <div class="form-group row">
+      <div class="col-md-10">
+        <div class="input-group">
+          <input type="text" class="form-control" name="search" [placeholder]="placeholder"
+                 [(ngModel)]="criteriaAllInOne">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-outline-secondary" title="Clear"
+                    *ngIf="criteriaAllInOne"
+                    (click)="criteriaAllInOne = ''">
+              <i class="far fa-times-circle"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </form>
+  <data-table id="customers-table"
+              [items]="consumerList | search: searchFields: criteriaAllInOne"
+              [isRefreshable]="true"
+              [isColumnsSelectable]="true"
+              [indexColumnHeader]="'#'"
+              [substituteRows]="false"
+              [pagination]="false"
+              [sizeClass]="'sm'"
+              (reload)="reloadConsumers($event)">
+    <data-table-column *ngFor="let column of columns" [property]="column.property" [header]="column.header" [sortable]="column.sortable" [visible]="column.visible">
+      <!--<ng-template *ngIf="column.cellTemplate" #dataTableCell let-item="item" [ngTemplateOutlet]="column.cellTemplate" [ngTemplateOutletContext]="{column: column, row: _this, item: item}">-->
+      <!--</ng-template>-->
+    </data-table-column>
+    <data-table-column header="Actions">
+      <ng-template #dataTableHeader let-item="item">
+        <i>Actions</i>
+      </ng-template>
+      <ng-template #dataTableCell let-item="item">
+        <button type="button" class="btn btn-sm text-white"
+                [ngClass]="{
+                    'btn-primary': consumer?.id !== item.id,
+                    'btn-secondary': consumer?.id === item.id
+                  }"
+                [disabled]="consumer?.id === item.id"
+                (click)="onConsumerSelect(item)">{{(consumer?.id === item.id) ? 'Selected' : 'Select'}}</button>
+      </ng-template>
+    </data-table-column>
+  </data-table>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="closeModal()">Close</button>
+</div>

@@ -1,0 +1,143 @@
+<div class="card">
+
+  <div class="card-header">
+    <div class="float-left" *ngIf="isAccessible(PageAccess.Create)">
+      <a class="btn btn-primary text-white" href="javascript:void(0)" *ngIf="!is('new')" (click)="showConfirm(confirmModal)"><i class="fas fa-key"></i> Reset Password</a>
+    </div>
+    <div class="float-right">
+      <a class="btn btn-md btn-secondary" [href]="linkToList()"><i class="fa fa-chevron-circle-left"></i> Return to List</a>
+      <button type="submit"
+              [ngClass]="['btn btn-md', is('new') ? 'btn-success' : 'btn-primary']"
+              (click)="modelForm.ngSubmit.emit()"
+              [disabled]="!modelForm.form.valid || isLoading">
+        <i class="fa fa-check-circle"></i> {{ is('new') ? 'Add' : 'Save' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body block-loading" [class.is-loading]="isLoading">
+
+    <form action="" method="post" enctype="multipart/form-data" class="form-horizontal admin-crud-form" (ngSubmit)="onSubmit()" #modelForm="ngForm">
+      <div class="form-group row">
+        <label class="col-md-2 form-control-label required" for="full-name">Full Name</label>
+        <div class="col-md-4">
+          <input type="text" id="full-name" name="full-name" class="form-control" placeholder="Full Name"
+                 [class.is-invalid]="fullName.touched && fullName.invalid"
+                 required
+                 [(ngModel)]="model.fullName" #fullName="ngModel">
+
+          <div *ngIf="fullName.touched && fullName.invalid" class="invalid-feedback">
+
+            <div *ngIf="fullName?.errors.required">
+              Full name is required.
+            </div>
+
+          </div>
+        </div>
+
+        <label class="col-md-2 form-control-label required" for="email-address">Email Address</label>
+        <div class="col-md-4">
+          <input type="email" id="email-address" name="email-address" class="form-control" placeholder="Email Address"
+                 [class.is-invalid]="email.touched && email.invalid"
+                 required email
+                 [(ngModel)]="model.email" #email="ngModel">
+
+          <div *ngIf="email.touched && email.invalid" class="invalid-feedback">
+
+            <div *ngIf="email?.errors.required">
+              Email address is required.
+            </div>
+            <div *ngIf="!email.errors.required && email?.errors.email">
+              "{{ email.value }}" is not a valid email.
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-md-2 form-control-label required pb-3" for="username">Username</label>
+        <div class="col-md-4 pb-3">
+          <input type="text" id="username" name="username" class="form-control" placeholder="Username"
+                 [class.is-invalid]="username.touched && username.invalid"
+                 required pattern="^[a-zA-Z_]{0,255}$"
+                 [(ngModel)]="model.username" #username="ngModel">
+
+          <div *ngIf="username.touched && username.invalid" class="invalid-feedback">
+
+            <div *ngIf="username?.errors.required">
+              Username is required.
+            </div>
+            <div *ngIf="username?.errors.pattern">
+              Username is limited to 255 characters and MUST has no numbers and special characters.
+            </div>
+
+          </div>
+        </div>
+
+        <label class="col-md-2 form-control-label pb-3" [class.d-none]="!is('new')"
+               [class.required]="is('new')" for="password">Password</label>
+        <div class="col-md-4 pb-3" [class.d-none]="!is('new')">
+          <input type="text" id="password" name="password" class="form-control" placeholder="Password"
+                 [class.is-invalid]="password.touched && password.invalid"
+                 [required]="is('new')" [pattern]="passwordValidationPattern"
+                 [(ngModel)]="model.password" #password="ngModel">
+          <div *ngIf="password.touched && password.invalid" class="invalid-feedback">
+
+            <div *ngIf="password?.errors.required">
+              Password is required.
+            </div>
+            <div *ngIf="password?.errors.pattern">
+              Password includes 8 to 16 characters and MUST contain capital letters, numbers and special characters.
+            </div>
+
+          </div>
+        </div>
+
+        <label class="col-md-2 form-control-label pb-3" for="job-designation">Job Designation</label>
+        <div class="col-md-4 pb-3">
+          <input type="text" id="job-designation" name="job-designation" class="form-control" placeholder="Job Designation"
+                 [class.is-invalid]="jobDesignation.touched && jobDesignation.invalid"
+                 [(ngModel)]="model.jobDesignation" #jobDesignation="ngModel">
+
+        </div>
+
+        <label class="col-md-2 form-control-label required pb-3" for="phone-number">Phone Number</label>
+        <div class="col-md-4 pb-3">
+          <input type="text" id="phone-number" name="phone-number" class="form-control" placeholder="Phone Number"
+                 [class.is-invalid]="phoneNumber.touched && phoneNumber.invalid"
+                 required pattern="^[0-9]{8}$"
+                 [(ngModel)]="model.phoneNumber" #phoneNumber="ngModel">
+
+          <div *ngIf="phoneNumber.touched && phoneNumber.invalid" class="invalid-feedback">
+
+            <div *ngIf="phoneNumber?.errors.required">
+              Phone number is required.
+            </div>
+            <div *ngIf="phoneNumber?.errors.pattern">
+              Phone number MUST contains 8 numbers.
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <ng-template #confirmModal>
+    <div class="modal-header">
+      <h4 class="modal-title text-center">
+        Reset password
+      </h4>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you wish to reset password user: {{ model.username }} ?</p>
+    </div>
+    <div class="modal-footer text-left">
+      <button type="button" class="btn btn-danger" (click)="onResetPassword()">Confirm</button>
+      <button type="button" class="btn btn-secondary" (click)="hideConfirm()">Cancel</button>
+    </div>
+  </ng-template>
+</div>
+

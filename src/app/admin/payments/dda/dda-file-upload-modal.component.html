@@ -1,0 +1,12 @@
+<div class="modal-header">
+  <h4 class="modal-title">Upload File</h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <file-upload (upload)="upload($event)"
+               (uploadSuccess)="uploadSuccess()"
+               (uploadFail)="uploadFail()"
+               #fileUpload></file-upload>
+</div>

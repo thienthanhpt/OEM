@@ -1,0 +1,17 @@
+<div class="modal-header">
+  <h4 class="modal-title">Generate DDA Files</h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="modal.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <admin-generation-transactions-list
+    (complete)="onComplete($event)" (generating)="loading = $event" [generateTrigger]="generateClicked">
+  </admin-generation-transactions-list>
+</div>
+<div class="modal-footer justify-content-between">
+  <button type="button" class="btn btn-md" (click)="modal.hide()">Back</button>
+  <button class="btn btn-success text-white" (click)="onGenerateClick()" [loadingDisable]="loading" [displaySpinner]="true">
+    Generate
+  </button>
+</div>
