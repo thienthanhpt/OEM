@@ -25,7 +25,7 @@
     "bootstrap": "^4.3.1",
     "chart.js": "^2.8.0",
     "core-js": "^2.5.4",
-    "jquery": "^3.3.1",
+    "jquery": "^3.4.0",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "ng-multiselect-dropdown": "^0.2.3",
